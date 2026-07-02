@@ -11,7 +11,7 @@ export default function HomeScreen({ pseudo, onLocal, onOnline, onRules, onLogou
   return (
     <div className="container">
       <div className="hero">
-        <img src="/map.jpg" alt="Plan de la maison" className="hero-map" />
+        <img src={import.meta.env.BASE_URL + "map.jpg"} alt="Plan de la maison" className="hero-map" />
         <h1>Revolver Noir</h1>
         <p className="tagline">
           {pseudo ? `Bienvenue, ${pseudo}.` : 'Bienvenue, chasseur.'} Traquez votre adversaire dans la maison — ou

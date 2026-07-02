@@ -455,3 +455,21 @@ button {
   box-shadow: var(--shadow);
   margin-bottom: 18px;
 }
+
+/* ---------- Confort mobile ---------- */
+button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+
+@media (max-width: 520px) {
+  body { font-size: 14px; }
+  .btn { padding: 12px 14px; min-height: 46px; }        /* cibles tactiles larges */
+  .actions-grid .btn { min-height: 52px; font-size: 12.5px; }
+  .room { min-height: 84px; padding: 7px; }
+  .room .room-name { font-size: 12px; }
+  .hud { grid-template-columns: 1fr; gap: 6px; }
+  .hud-player { padding: 8px 10px; }
+  .log { max-height: 220px; }
+  .hero { padding: 18px 8px 14px; }
+  .hero-map { width: min(280px, 90%); }
+  .game-layout { gap: 10px; }
+  .code-badge { font-size: 21px; }
+}
