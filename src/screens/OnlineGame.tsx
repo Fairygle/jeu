@@ -9,6 +9,7 @@ interface Props {
   userId: string;
   pseudo: string;
   onBack: () => void;
+  initialMode?: 'quick' | 'code';
 }
 
 interface Meta {
@@ -57,7 +58,7 @@ function autoAction(s: GameState, who: PlayerIndex): GameAction {
   return { type: 'end_turn' };
 }
 
-export default function OnlineGame({ userId, pseudo, onBack }: Props) {
+export default function OnlineGame({ userId, pseudo, onBack, initialMode = 'code' }: Props) {
   const [row, setRow] = useState<GameRow | null>(null);
   const [joinCode, setJoinCode] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -68,6 +69,7 @@ export default function OnlineGame({ userId, pseudo, onBack }: Props) {
   const [searching, setSearching] = useState(false);
   const rowRef = useRef<GameRow | null>(null);
   rowRef.current = row;
+  const autoQuickTried = useRef(false);
 
   const gameId = row?.id ?? null;
   const me: PlayerIndex = row ? (row.host_id === userId ? 0 : 1) : 0;
@@ -190,6 +192,14 @@ export default function OnlineGame({ userId, pseudo, onBack }: Props) {
       setBusy(false);
     }
   }
+
+  // Depuis l'accueil, "Partie rapide" saute directement à la recherche
+  useEffect(() => {
+    if (initialMode === 'quick' && !autoQuickTried.current && !row && !foundGame) {
+      autoQuickTried.current = true;
+      searchGame();
+    }
+  }, [initialMode, row, foundGame]);
 
   async function confirmJoin(target: GameRow) {
     if (!supabase) return;
@@ -315,11 +325,8 @@ export default function OnlineGame({ userId, pseudo, onBack }: Props) {
             <button className="btn btn-icon" onClick={onBack} aria-label="Retour">←</button>
           </div>
           {error && <div className="error-box">{error}</div>}
-          <button className="btn btn-gold btn-block btn-lg" onClick={searchGame} disabled={busy}>
-            🔍 Recherche rapide
-          </button>
-          <button className="btn btn-block mt" onClick={() => createGame(false)} disabled={busy}>
-            Créer (code privé)
+          <button className="btn btn-gold btn-block btn-lg" onClick={() => createGame(false)} disabled={busy}>
+            Créer un salon (code)
           </button>
           <div className="lobby-sep">ou</div>
           <div className="row" style={{ gap: 8 }}>

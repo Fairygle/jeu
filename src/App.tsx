@@ -9,11 +9,13 @@ import FriendsSidebar from './components/FriendsSidebar';
 import { supabase, supabaseConfigured } from './lib/supabase';
 
 type Screen = 'home' | 'rules' | 'local' | 'online';
+type OnlineMode = 'quick' | 'code';
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [guest, setGuest] = useState(false);
   const [screen, setScreen] = useState<Screen>('home');
+  const [onlineMode, setOnlineMode] = useState<OnlineMode>('code');
   const [ready, setReady] = useState(!supabaseConfigured);
 
   useEffect(() => {
@@ -74,8 +76,16 @@ export default function App() {
           </div>
           <HomeScreen
             pseudo={pseudo}
+            userId={session?.user.id ?? null}
             onLocal={() => setScreen('local')}
-            onOnline={() => setScreen('online')}
+            onQuickMatch={() => {
+              setOnlineMode('quick');
+              setScreen('online');
+            }}
+            onCreateCode={() => {
+              setOnlineMode('code');
+              setScreen('online');
+            }}
             onRules={() => setScreen('rules')}
             onLogout={logout}
             onlineEnabled={onlineEnabled}
@@ -86,7 +96,12 @@ export default function App() {
       {screen === 'rules' && <RulesScreen onBack={() => setScreen('home')} />}
       {screen === 'local' && <LocalGame onBack={() => setScreen('home')} />}
       {screen === 'online' && session && (
-        <OnlineGame userId={session.user.id} pseudo={pseudo ?? 'Joueur'} onBack={() => setScreen('home')} />
+        <OnlineGame
+          userId={session.user.id}
+          pseudo={pseudo ?? 'Joueur'}
+          onBack={() => setScreen('home')}
+          initialMode={onlineMode}
+        />
       )}
     </div>
   );
