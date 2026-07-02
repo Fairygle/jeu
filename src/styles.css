@@ -1257,3 +1257,52 @@ h1, h2, h3, .display, .brand, .btn-gold {
   .brand-thumb { width: 44px; height: 44px; }
   .lobby-chat { height: 30vh; min-height: 160px; }
 }
+
+/* ==========================================================================
+   Bandeau "dernière action" + règles en jeu
+   ========================================================================== */
+
+.ticker {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 6px;
+}
+.ticker-line {
+  font-size: 12.5px;
+  line-height: 1.35;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  background: var(--panel);
+  color: var(--muted);
+}
+.ticker-line.latest {
+  color: var(--text);
+  animation: ticker-in 0.25s ease-out;
+}
+.ticker-line.damage { border-left-color: var(--red); color: #e2988c; background: rgba(192, 80, 63, 0.08); }
+.ticker-line.reveal { border-left-color: var(--gold); color: var(--gold-bright); background: rgba(201, 162, 75, 0.07); }
+.ticker-line.info.latest { border-left-color: var(--blue); }
+@keyframes ticker-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+.rules-modal { width: min(460px, 94vw); }
+.rules-quick {
+  padding: 12px 14px;
+  overflow-y: auto;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.rules-quick p { margin: 0 0 7px; color: var(--text); }
+.rules-quick strong { color: var(--gold-bright); }
+.rules-quick-section {
+  font-family: 'Special Elite', 'Courier New', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  margin: 12px 0 7px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 3px;
+}

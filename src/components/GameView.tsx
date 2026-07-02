@@ -30,6 +30,7 @@ const EFFECT_INFO: Partial<Record<RoomId, { icon: string; label: string }>> = {
 export default function GameView({ state, viewer, canAct, onAction, playerNames, error, deadline }: Props) {
   const [wheelRoom, setWheelRoom] = useState<RoomId | null>(null);
   const [showLog, setShowLog] = useState(false);
+  const [showRules, setShowRules] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -127,6 +128,9 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
   }
 
   const visibleLog = state.log.filter((e) => e.visibility === 'both' || e.visibility === viewer);
+  const lastEvents = visibleLog
+    .filter((e) => !e.text.startsWith('Tour '))
+    .slice(-2);
   const wheelOptions = wheelRoom !== null ? optionsFor(wheelRoom) : [];
 
   const turnLabel = isSetup
@@ -158,6 +162,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
           <span className="hp-heart">{'♥'.repeat(Math.max(0, foe.hp))}{'♡'.repeat(Math.max(0, 2 - foe.hp))}</span>
           {foe.revealedUntilMove && <span className="status revealed">révélé</span>}
         </span>
+        <button className="log-toggle" onClick={() => setShowRules(true)} aria-label="Règles">❓</button>
         <button className="log-toggle" onClick={() => setShowLog(true)} aria-label="Journal">📜</button>
       </div>
 
@@ -173,6 +178,17 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       )}
       {error && <div className="error-box error-mini">{error}</div>}
 
+
+      {/* Dernière action, bien visible */}
+      {lastEvents.length > 0 && (
+        <div className="ticker">
+          {lastEvents.map((e, i) => (
+            <div key={`${e.turn}-${e.text}-${i}`} className={`ticker-line ${e.kind ?? ''} ${i === lastEvents.length - 1 ? 'latest' : ''}`}>
+              {e.text}
+            </div>
+          ))}
+        </div>
+      )}
       {/* Plateau — occupe l'essentiel de l'écran */}
       <div className="board-wrap">
         <div className="board">
@@ -243,6 +259,37 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
         </div>
       )}
 
+
+      {/* Règles (à la demande, sans quitter la partie) */}
+      {showRules && (
+        <div className="wheel-overlay" onClick={() => setShowRules(false)}>
+          <div className="log-modal rules-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="log-modal-header">
+              <span>Règles</span>
+              <button className="wheel-close-inline" onClick={() => setShowRules(false)}>✕</button>
+            </div>
+            <div className="rules-quick">
+              <p><strong>But :</strong> réduire l'adversaire à 0 ♥ (chacun en a 2).</p>
+              <p><strong>Tour :</strong> 2 ⚡ (3 si vous commencez dans la Cuisine). Touchez une pièce pour agir.</p>
+              <div className="rules-quick-section">Actions</div>
+              <p>👣 <strong>Aller</strong> (1⚡) — pièce voisine, vous redevenez caché.</p>
+              <p>🏃 <strong>Sprint</strong> (2⚡) — jusqu'à 2 pièces.</p>
+              <p>🔫 <strong>Tirer</strong> (2⚡) — votre pièce ou en ligne de vue. Vous êtes révélé, puis 🪶 repli gratuit.</p>
+              <p>👂 <strong>Écouter</strong> (1⚡) — l'adversaire désigne une pièce voisine de la sienne.</p>
+              <p>🪤 <strong>Piège</strong> (1⚡, max 2) — posé dans votre pièce, invisible pour l'autre.</p>
+              <p>💥 <strong>Déclencher</strong> (1⚡) — active votre piège : −1♥ si l'adversaire y est.</p>
+              <div className="rules-quick-section">Effets des pièces</div>
+              <p>🔔 <strong>Foyer</strong> (gratuit) — révèle l'adversaire s'il est à l'étage, sinon il indique une pièce voisine.</p>
+              <p>🍲 <strong>Cuisine</strong> — 3⚡ si vous y commencez votre tour.</p>
+              <p>🕳️ <strong>Bibliothèque</strong> (1⚡) — un adversaire en Cuisine chute au Sous-sol.</p>
+              <p>🌊 <strong>Chambre</strong> (1⚡) — inonde le Sous-sol : −1♥ à qui s'y trouve, accès bloqué un tour.</p>
+              <p>🪂 <strong>Balcon</strong> (gratuit) — saut vers la Cuisine, vous êtes révélé.</p>
+              <p>⏳ <strong>Sous-sol</strong> (1⚡) — piège retardé n'importe où, se déclenche à votre prochain tour.</p>
+              <p className="muted small">Activer un effet vous révèle jusqu'à votre prochain déplacement. ⏱ 60 s par tour, 2 tours inactifs = forfait.</p>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Journal (à la demande) */}
       {showLog && (
         <div className="wheel-overlay" onClick={() => setShowLog(false)}>
