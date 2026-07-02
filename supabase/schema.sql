@@ -65,3 +65,6 @@ create policy "games_delete" on public.games
 -- ------------------ Realtime ------------------
 -- Active la diffusion des changements de la table games
 alter publication supabase_realtime add table public.games;
+
+-- Diffuser aussi les événements DELETE en temps réel (détection de départ)
+alter table public.games replica identity full;

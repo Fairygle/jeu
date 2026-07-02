@@ -12,22 +12,19 @@ interface Props {
   myId: string;
   onSend: (text: string) => void;
   opponentName: string;
+  opponentOnline: boolean;
 }
 
-export default function ChatBox({ messages, myId, onSend, opponentName }: Props) {
-  const [open, setOpen] = useState(false);
+export default function ChatBox({ messages, myId, onSend, opponentName, opponentOnline }: Props) {
   const [text, setText] = useState('');
-  const [seen, setSeen] = useState(0);
-  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  const unread = open ? 0 : Math.max(0, messages.length - seen);
+  // N'affiche que les derniers messages dans la barre compacte
+  const recent = messages.slice(-4);
 
   useEffect(() => {
-    if (open) {
-      setSeen(messages.length);
-      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages.length, open]);
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+  }, [messages.length]);
 
   function submit() {
     const t = text.trim();
@@ -37,43 +34,31 @@ export default function ChatBox({ messages, myId, onSend, opponentName }: Props)
   }
 
   return (
-    <>
-      <button className="chat-fab" onClick={() => setOpen(true)} aria-label="Ouvrir le chat">
-        💬{unread > 0 && <span className="chat-badge">{unread}</span>}
-      </button>
-
-      {open && (
-        <div className="chat-overlay" onClick={() => setOpen(false)}>
-          <div className="chat-panel" onClick={(e) => e.stopPropagation()}>
-            <div className="chat-header">
-              <span>Discussion — {opponentName}</span>
-              <button className="wheel-close-inline" onClick={() => setOpen(false)}>✕</button>
-            </div>
-            <div className="chat-messages">
-              {messages.length === 0 && <div className="chat-empty">Aucun message. Dites bonjour !</div>}
-              {messages.map((m, i) => (
-                <div key={i} className={`chat-msg ${m.from === myId ? 'mine' : 'theirs'}`}>
-                  {m.from !== myId && <span className="chat-msg-name">{m.name}</span>}
-                  <span className="chat-bubble">{m.text}</span>
-                </div>
-              ))}
-              <div ref={bottomRef} />
-            </div>
-            <div className="chat-input-row">
-              <input
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && submit()}
-                placeholder="Votre message…"
-                maxLength={300}
-              />
-              <button className="btn btn-gold" onClick={submit} disabled={!text.trim()}>
-                Envoyer
-              </button>
-            </div>
+    <div className="chat-bar">
+      <div className="chat-bar-status">
+        <span className={`presence-dot ${opponentOnline ? 'on' : 'off'}`} />
+        <span className="chat-bar-name">{opponentName}</span>
+        <span className="chat-bar-state">{opponentOnline ? 'en ligne' : 'hors ligne'}</span>
+      </div>
+      <div className="chat-bar-messages" ref={scrollRef}>
+        {recent.length === 0 && <div className="chat-empty">Écrivez un message à votre adversaire…</div>}
+        {recent.map((m, i) => (
+          <div key={i} className={`chat-line ${m.from === myId ? 'mine' : 'theirs'}`}>
+            <span className="chat-line-name">{m.from === myId ? 'Vous' : m.name}</span>
+            <span className="chat-line-text">{m.text}</span>
           </div>
-        </div>
-      )}
-    </>
+        ))}
+      </div>
+      <div className="chat-bar-input">
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && submit()}
+          placeholder="Message…"
+          maxLength={300}
+        />
+        <button className="chat-send" onClick={submit} disabled={!text.trim()} aria-label="Envoyer">➤</button>
+      </div>
+    </div>
   );
 }

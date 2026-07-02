@@ -27,36 +27,58 @@ export default function OnlineGame({ userId, pseudo, onBack }: Props) {
   const [joinCode, setJoinCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [opponentOnline, setOpponentOnline] = useState(false);
+  const [opponentLeft, setOpponentLeft] = useState(false);
   const rowRef = useRef<GameRow | null>(null);
   rowRef.current = row;
 
   const gameId = row?.id ?? null;
 
-  // Récupère la dernière version de la partie depuis la base
   const refresh = useCallback(async () => {
     if (!supabase || !rowRef.current) return;
     const { data } = await supabase.from('games').select('*').eq('id', rowRef.current.id).maybeSingle();
     if (data) setRow(data as GameRow);
+    else {
+      // La partie a été supprimée (adversaire a quitté depuis le lobby)
+      setOpponentLeft(true);
+    }
   }, []);
 
-  // Realtime + polling de secours (fiabilise l'arrivée de l'adversaire)
+  // Realtime : changements de la partie + présence des joueurs
   useEffect(() => {
     if (!gameId || !supabase) return;
     const sb = supabase;
-    const channel = sb
-      .channel(`game-${gameId}`)
+
+    const channel = sb.channel(`game-${gameId}`, { config: { presence: { key: userId } } });
+
+    channel
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'games', filter: `id=eq.${gameId}` },
         (payload) => setRow(payload.new as GameRow),
       )
-      .subscribe();
-    const poll = setInterval(refresh, 2000);
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'games', filter: `id=eq.${gameId}` },
+        () => setOpponentLeft(true),
+      )
+      .on('presence', { event: 'sync' }, () => {
+        const others = Object.keys(channel.presenceState()).filter((k) => k !== userId);
+        setOpponentOnline(others.length > 0);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({ userId, at: Date.now() });
+        }
+      });
+
+    const poll = setInterval(refresh, 2500);
     return () => {
+      channel.untrack();
       sb.removeChannel(channel);
       clearInterval(poll);
     };
-  }, [gameId, refresh]);
+  }, [gameId, refresh, userId]);
 
   async function createGame() {
     if (!supabase) return;
@@ -128,6 +150,21 @@ export default function OnlineGame({ userId, pseudo, onBack }: Props) {
     await supabase.from('games').update({ messages }).eq('id', row.id);
   }
 
+  async function quitGame() {
+    if (supabase && rowRef.current) {
+      const r = rowRef.current;
+      // Si la partie n'a pas encore commencé pour de bon, on la supprime ; sinon on la marque terminée.
+      if (r.status === 'waiting') {
+        await supabase.from('games').delete().eq('id', r.id);
+      } else if (r.state.phase !== 'finished') {
+        const me: PlayerIndex = r.host_id === userId ? 0 : 1;
+        const abandoned = { ...r.state, phase: 'finished' as const, winner: (me === 0 ? 1 : 0) as PlayerIndex };
+        await supabase.from('games').update({ state: abandoned, status: 'finished' }).eq('id', r.id);
+      }
+    }
+    onBack();
+  }
+
   // ------- Lobby -------
   if (!row) {
     return (
@@ -168,15 +205,8 @@ export default function OnlineGame({ userId, pseudo, onBack }: Props) {
           <h2 className="mb">Partie créée</h2>
           <p className="muted mb">Partagez ce code avec votre adversaire :</p>
           <div className="code-badge mb">{row.code}</div>
-          <p className="muted small">
-            En attente d'un adversaire<span className="dots" />
-          </p>
-          <button className="btn btn-block mt" onClick={async () => {
-            if (supabase) await supabase.from('games').delete().eq('id', row.id);
-            setRow(null);
-          }}>
-            Annuler
-          </button>
+          <p className="muted small">En attente d'un adversaire<span className="dots" /></p>
+          <button className="btn btn-block mt" onClick={quitGame}>Annuler</button>
         </div>
       </div>
     );
@@ -188,11 +218,12 @@ export default function OnlineGame({ userId, pseudo, onBack }: Props) {
   const s = row.state;
   const myTurnToAct =
     s.phase === 'setup' ? s.setupTurn === me : s.pending ? s.pending.responder === me : s.active === me;
+  const opponentName = names[me === 0 ? 1 : 0];
 
   return (
     <div className="container game-page">
       <div className="game-header">
-        <button className="btn btn-icon" onClick={onBack} aria-label="Quitter">←</button>
+        <button className="btn btn-icon" onClick={quitGame} aria-label="Quitter">←</button>
         <span className="game-header-title">Partie {row.code}</span>
       </div>
 
@@ -209,8 +240,18 @@ export default function OnlineGame({ userId, pseudo, onBack }: Props) {
         messages={row.messages ?? []}
         myId={userId}
         onSend={sendMessage}
-        opponentName={names[me === 0 ? 1 : 0]}
+        opponentName={opponentName}
+        opponentOnline={opponentOnline}
       />
+
+      {/* Adversaire déconnecté pendant la partie */}
+      {opponentLeft && s.phase !== 'finished' && (
+        <div className="game-over">
+          <h2>Adversaire déconnecté</h2>
+          <p className="muted">{opponentName} a quitté la partie.</p>
+          <button className="btn btn-gold btn-lg" onClick={onBack}>Retour à l'accueil</button>
+        </div>
+      )}
 
       {s.phase === 'finished' && (
         <div className="game-over">
