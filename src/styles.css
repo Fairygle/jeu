@@ -3,7 +3,7 @@
    Fond quasi noir, panneaux à bordures fines, accents or/ambre, typo Cinzel
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
   --bg: #0e0e11;
@@ -39,7 +39,7 @@ body {
 }
 
 h1, h2, h3, .display {
-  font-family: 'Cinzel', serif;
+  font-family: 'Special Elite', 'Courier New', monospace;
   letter-spacing: 0.04em;
   color: var(--gold-bright);
 }
@@ -77,7 +77,7 @@ button {
 }
 
 .brand {
-  font-family: 'Cinzel', serif;
+  font-family: 'Special Elite', 'Courier New', monospace;
   font-weight: 900;
   font-size: 20px;
   color: var(--gold-bright);
@@ -269,7 +269,7 @@ button {
   transition: border-color 0.12s, box-shadow 0.12s;
 }
 .room .room-id { font-size: 10px; color: var(--muted); letter-spacing: 0.15em; }
-.room .room-name { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: var(--text); }
+.room .room-name { font-family: 'Special Elite', 'Courier New', monospace; font-size: 13px; font-weight: 700; color: var(--text); }
 .room .room-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: auto; }
 
 .room.targetable {
@@ -316,7 +316,7 @@ button {
   padding: 10px 12px;
 }
 .hud-player.active-turn { border-color: var(--gold-dim); box-shadow: 0 0 12px rgba(201, 162, 75, 0.12); }
-.hud-player .name { font-family: 'Cinzel', serif; font-size: 13px; color: var(--gold-bright); }
+.hud-player .name { font-family: 'Special Elite', 'Courier New', monospace; font-size: 13px; color: var(--gold-bright); }
 .hud-player .stats { display: flex; gap: 12px; margin-top: 6px; font-size: 13px; align-items: center; flex-wrap: wrap; }
 .hp-heart { color: var(--red); letter-spacing: 2px; }
 .ap-pip { color: var(--green); letter-spacing: 2px; }
@@ -426,7 +426,7 @@ button {
 .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .spread { justify-content: space-between; }
 .code-badge {
-  font-family: 'Cinzel', serif;
+  font-family: 'Special Elite', 'Courier New', monospace;
   font-size: 26px;
   letter-spacing: 0.35em;
   color: var(--gold-bright);
@@ -542,7 +542,7 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   padding: 8px;
 }
 .wheel-room-id { font-size: 10px; color: var(--muted); letter-spacing: 0.2em; }
-.wheel-room-name { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: var(--gold-bright); line-height: 1.15; }
+.wheel-room-name { font-family: 'Special Elite', 'Courier New', monospace; font-size: 13px; font-weight: 700; color: var(--gold-bright); line-height: 1.15; }
 
 .wheel-option {
   position: absolute;
@@ -638,7 +638,7 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .strip-player.turn { border-bottom-color: var(--gold); }
 .strip-player:last-child { margin-left: auto; }
 .strip-name {
-  font-family: 'Cinzel', serif;
+  font-family: 'Special Elite', 'Courier New', monospace;
   font-size: 11px;
   font-weight: 700;
   color: var(--text);
@@ -746,7 +746,7 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   padding: 2px 2px 8px;
 }
 .game-header-title {
-  font-family: 'Cinzel', serif;
+  font-family: 'Special Elite', 'Courier New', monospace;
   font-size: 13px;
   letter-spacing: 0.08em;
   color: var(--gold-bright);
@@ -765,7 +765,7 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   font-size: 12px;
 }
 .turn-indicator {
-  font-family: 'Cinzel', serif;
+  font-family: 'Special Elite', 'Courier New', monospace;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -856,7 +856,7 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   justify-content: space-between;
   padding: 10px 14px;
   border-bottom: 1px solid var(--border);
-  font-family: 'Cinzel', serif;
+  font-family: 'Special Elite', 'Courier New', monospace;
   font-size: 13px;
   color: var(--gold-bright);
   text-transform: uppercase;
@@ -910,7 +910,7 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 }
 .presence-dot.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
 .presence-dot.off { background: #55524a; }
-.chat-bar-name { font-family: 'Cinzel', serif; color: var(--gold-bright); font-size: 11px; }
+.chat-bar-name { font-family: 'Special Elite', 'Courier New', monospace; color: var(--gold-bright); font-size: 11px; }
 .chat-bar-state { color: var(--muted); margin-left: auto; }
 
 .chat-bar-messages {
@@ -1030,7 +1030,7 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   justify-content: space-between;
   padding: 14px;
   border-bottom: 1px solid var(--border);
-  font-family: 'Cinzel', serif;
+  font-family: 'Special Elite', 'Courier New', monospace;
   font-size: 14px;
   color: var(--gold-bright);
   text-transform: uppercase;
@@ -1076,3 +1076,55 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 }
 .mini-btn.ok { color: var(--green); border-color: var(--green); }
 .mini-btn.no { color: var(--muted); }
+
+/* ==========================================================================
+   Lobby épuré
+   ========================================================================== */
+
+.lobby-card { padding: 20px; }
+.lobby-card h2 { font-size: 17px; }
+.lobby-sep {
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin: 12px 0;
+  position: relative;
+}
+.lobby-sep::before, .lobby-sep::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 34%;
+  height: 1px;
+  background: var(--border);
+}
+.lobby-sep::before { left: 0; }
+.lobby-sep::after { right: 0; }
+.lobby-code-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 11px 12px;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  text-align: center;
+}
+.lobby-code-input:focus { outline: none; border-color: var(--gold-dim); }
+.found-name {
+  font-family: 'Special Elite', 'Courier New', monospace;
+  font-size: 20px;
+  color: var(--gold-bright);
+  margin: 6px 0 16px;
+}
+
+/* Ajustements de la police machine à écrire : espacement resserré,
+   tailles légèrement réduites pour compenser sa largeur */
+h1, h2, h3, .display, .brand, .btn-gold {
+  letter-spacing: 0.01em;
+}
+.hero h1 { font-size: clamp(24px, 5.5vw, 38px); }

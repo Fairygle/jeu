@@ -283,14 +283,12 @@ export default function OnlineGame({ userId, pseudo, onBack }: Props) {
   if (foundGame && !row) {
     return (
       <div className="center-page">
-        <div className="panel auth-card" style={{ textAlign: 'center' }}>
-          <h2 className="mb">Partie trouvée !</h2>
-          <p className="muted mb">
-            Adversaire : <strong style={{ color: 'var(--gold-bright)' }}>{foundGame.host_pseudo}</strong>
-          </p>
+        <div className="panel auth-card lobby-card" style={{ textAlign: 'center' }}>
+          <h2>Partie trouvée</h2>
+          <p className="found-name">{foundGame.host_pseudo}</p>
           {error && <div className="error-box">{error}</div>}
           <button className="btn btn-gold btn-block btn-lg" onClick={() => confirmJoin(foundGame)} disabled={busy}>
-            Rejoindre la partie
+            Rejoindre
           </button>
           <button
             className="btn btn-block mt"
@@ -311,31 +309,31 @@ export default function OnlineGame({ userId, pseudo, onBack }: Props) {
   if (!row) {
     return (
       <div className="center-page">
-        <div className="panel auth-card">
+        <div className="panel auth-card lobby-card">
           <div className="row spread mb">
-            <h2 style={{ fontSize: 20 }}>Multijoueur</h2>
-            <button className="btn" onClick={onBack}>← Retour</button>
+            <h2>Multijoueur</h2>
+            <button className="btn btn-icon" onClick={onBack} aria-label="Retour">←</button>
           </div>
           {error && <div className="error-box">{error}</div>}
           <button className="btn btn-gold btn-block btn-lg" onClick={searchGame} disabled={busy}>
-            🔍 Recherche automatique
+            🔍 Recherche rapide
           </button>
           <button className="btn btn-block mt" onClick={() => createGame(false)} disabled={busy}>
-            Créer une partie privée (code)
+            Créer (code privé)
           </button>
-          <div className="muted small" style={{ textAlign: 'center', margin: '14px 0' }}>— ou rejoindre par code —</div>
-          <div className="field">
+          <div className="lobby-sep">ou</div>
+          <div className="row" style={{ gap: 8 }}>
             <input
+              className="lobby-code-input"
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              placeholder="ABC123"
+              placeholder="CODE"
               maxLength={6}
-              style={{ textTransform: 'uppercase', letterSpacing: '0.3em', textAlign: 'center' }}
             />
+            <button className="btn" onClick={joinByCode} disabled={busy || joinCode.length !== 6}>
+              Rejoindre
+            </button>
           </div>
-          <button className="btn btn-block" onClick={joinByCode} disabled={busy || joinCode.length !== 6}>
-            Rejoindre par code
-          </button>
         </div>
       </div>
     );
@@ -346,17 +344,10 @@ export default function OnlineGame({ userId, pseudo, onBack }: Props) {
     const isSearch = row.meta?.matchmaking;
     return (
       <div className="center-page">
-        <div className="panel auth-card" style={{ textAlign: 'center' }}>
-          <h2 className="mb">{isSearch ? 'Recherche en cours' : 'Partie créée'}</h2>
-          {isSearch ? (
-            <p className="muted mb">Vous êtes en file d'attente. Dès qu'un adversaire lance une recherche, la partie commencera.</p>
-          ) : (
-            <>
-              <p className="muted mb">Partagez ce code avec votre adversaire :</p>
-              <div className="code-badge mb">{row.code}</div>
-            </>
-          )}
-          <p className="muted small">En attente d'un adversaire<span className="dots" /></p>
+        <div className="panel auth-card lobby-card" style={{ textAlign: 'center' }}>
+          <h2>{isSearch ? 'Recherche…' : 'Partie créée'}</h2>
+          {!isSearch && <div className="code-badge mt">{row.code}</div>}
+          <p className="muted small mt">En attente d'un adversaire<span className="dots" /></p>
           <button className="btn btn-block mt" onClick={quitGame}>Annuler</button>
         </div>
       </div>
