@@ -233,7 +233,6 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
         <div className="wheel-overlay" onClick={() => setWheelRoom(null)}>
           <div className="wheel" onClick={(e) => e.stopPropagation()}>
             <div className="wheel-center">
-              <span className="wheel-room-id">{ROOMS[wheelRoom].short}</span>
               <span className="wheel-room-name">{ROOMS[wheelRoom].name}</span>
             </div>
             {wheelOptions.map((opt, i) => {
@@ -324,11 +323,10 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
         onClick={() => clickRoom(id)}
         aria-label={ROOMS[id].name}
       >
-        <span className="room-id">{ROOMS[id].short}</span>
         <span className="room-name">{ROOMS[id].name}</span>
         <span className="room-tags">
-          {showMe && <span className="tag me">VOUS</span>}
-          {showFoe && <span className="tag foe">ADV</span>}
+          {showMe && <span className="token me" title={playerNames[viewer]}>{(playerNames[viewer] || 'V')[0].toUpperCase()}</span>}
+          {showFoe && <span className="token foe" title={playerNames[viewer === 0 ? 1 : 0]}>{(playerNames[viewer === 0 ? 1 : 0] || 'A')[0].toUpperCase()}</span>}
           {me.traps.includes(id) && <span className="tag trap">piège</span>}
           {me.delayedTraps.includes(id) && <span className="tag delayed">retardé</span>}
           {flooded && <span className="tag flood">inondé</span>}

@@ -27,23 +27,25 @@ button:disabled, .btn:disabled {
 @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg: #0e0e11;
-  --panel: #17171c;
-  --panel-2: #1e1e25;
-  --panel-3: #26262f;
-  --border: #2c2c36;
-  --border-lit: #4a4433;
-  --gold: #c9a24b;
-  --gold-bright: #e8c76e;
-  --gold-dim: #8a7238;
-  --text: #d8d4c8;
-  --muted: #8d897b;
-  --red: #c0503f;
-  --red-dim: #7a3228;
-  --green: #55a065;
-  --blue: #5b86b5;
-  --radius: 6px;
-  --shadow: 0 4px 18px rgba(0, 0, 0, 0.55);
+  /* Ambiance carte à jouer : papier blanc, encre noire, bords tranchants */
+  --bg: #141414;
+  --panel: #f6f3ea;        /* face de carte, blanc cassé */
+  --panel-2: #ece8db;      /* papier légèrement ombré */
+  --panel-3: #ffffff;      /* carte au premier plan */
+  --border: #101010;       /* encre noire, bord net */
+  --border-lit: #101010;
+  --gold: #101010;         /* l'accent est désormais l'encre */
+  --gold-bright: #101010;
+  --gold-dim: #101010;
+  --text: #16130f;         /* encre sur papier */
+  --muted: #6d675c;
+  --red: #a3231d;          /* rouge cœur/carreau */
+  --red-dim: #7c1a15;
+  --green: #2f6b3c;
+  --blue: #23527c;
+  --radius: 0;             /* bords droits partout */
+  --shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+  --ink-light: #f2efe6;    /* encre claire pour le fond sombre */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1327,3 +1329,88 @@ h1, h2, h3, .display, .brand, .btn-gold {
   border-bottom: 1px solid var(--border);
   padding-bottom: 3px;
 }
+
+
+/* ==========================================================================
+   Thème carte à jouer — encre claire sur le fond, noire sur les cartes
+   ========================================================================== */
+
+body { color: var(--ink-light); }
+.brand-title, .hero h1 { color: var(--ink-light); }
+.brand-sub, .tagline { color: #a49e90; }
+.floor-label { color: #a49e90; }
+
+/* Faces de carte : panneaux blancs, bord noir tranchant, ombre portée réaliste */
+.panel, .mode-btn, .create-opt, .room, .lobby-chat, .chat-bar, .friends-panel,
+.log-modal, .wheel, .game-over-card {
+  background: linear-gradient(160deg, #ffffff 0%, var(--panel) 55%, #eeeadd 100%);
+  border: 2px solid var(--border);
+  color: var(--text);
+}
+
+button, .btn {
+  background: linear-gradient(160deg, #ffffff, var(--panel));
+  border: 2px solid var(--border);
+  color: var(--text);
+  font-weight: 700;
+  box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.85), 6px 9px 14px rgba(0, 0, 0, 0.35);
+}
+button:active:not(:disabled), .btn:active:not(:disabled) {
+  transform: translate(2px, 3px);
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.85);
+}
+.btn-gold, .mode-btn.primary {
+  background: #101010;
+  color: var(--ink-light);
+  border-color: #101010;
+}
+.btn-danger { color: var(--red); }
+
+/* Champs de saisie sur carte */
+input, .lobby-code-input, .chat-bar-input input, .lobby-chat-input input, .friends-add input {
+  background: #ffffff;
+  border: 2px solid var(--border);
+  color: var(--text);
+}
+input::placeholder { color: #9a938a; }
+
+.chat-send { background: #101010; color: var(--ink-light); border: 2px solid #101010; }
+
+/* Plateau : pièces = petites cartes */
+.room { box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.8); }
+.room.targetable { outline: 2px dashed var(--red); outline-offset: -6px; }
+.room.flooded { background: linear-gradient(160deg, #dfe7ee, #c9d6e2); }
+
+/* Jetons ronds de personnage */
+.token {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-family: 'Special Elite', 'Courier New', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  border: 2px solid #101010;
+  box-shadow: 1px 2px 0 rgba(0, 0, 0, 0.7), 2px 4px 6px rgba(0, 0, 0, 0.3);
+}
+.token.me { background: #101010; color: #f2efe6; }
+.token.foe { background: #ffffff; color: var(--red); border-color: var(--red); }
+
+/* Bandeau dernière action sur carte */
+.ticker-line { background: var(--panel); color: var(--muted); border-width: 2px; }
+.ticker-line.latest { color: var(--text); }
+.ticker-line.damage { color: var(--red); background: #f8e8e6; }
+.ticker-line.reveal { color: #101010; background: #fdf7e3; }
+
+/* Le journal et les règles restent lisibles */
+.rules-quick strong { color: #101010; }
+.chat-line.mine .chat-line-name { color: #101010; }
+.chat-line.theirs .chat-line-name { color: var(--red); }
+.found-name { color: #101010; }
+.lobby-chat-header, .friends-header, .chat-bar-name { color: #101010; }
+
+/* FABs ronds conservent leur forme mais passent au thème */
+.friends-fab, .chat-fab { background: #f6f3ea; color: #101010; border: 2px solid #101010; }
