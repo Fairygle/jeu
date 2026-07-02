@@ -959,3 +959,13 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 @keyframes dots {
   0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; }
 }
+
+/* Chrono de tour */
+.turn-timer {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green);
+  white-space: nowrap;
+}
+.turn-timer.urgent { color: var(--red); animation: timer-blink 1s step-end infinite; }
+@keyframes timer-blink { 50% { opacity: 0.35; } }

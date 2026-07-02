@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ADJACENCY, ALL_ROOMS, LINE_OF_SIGHT, ROOMS, RoomId, reachable } from '../game/board';
 import { GameAction, GameState, PlayerIndex, roomEffectCost } from '../game/engine';
 
@@ -9,6 +9,8 @@ interface Props {
   onAction: (action: GameAction) => void;
   playerNames: [string, string];
   error?: string | null;
+  /** Échéance du tour (timestamp ms) — affiche un compte à rebours si fourni. */
+  deadline?: number | null;
 }
 
 interface WheelOption {
@@ -25,9 +27,18 @@ const EFFECT_INFO: Partial<Record<RoomId, { icon: string; label: string }>> = {
   7: { icon: '🪂', label: 'Sauter' },
 };
 
-export default function GameView({ state, viewer, canAct, onAction, playerNames, error }: Props) {
+export default function GameView({ state, viewer, canAct, onAction, playerNames, error, deadline }: Props) {
   const [wheelRoom, setWheelRoom] = useState<RoomId | null>(null);
   const [showLog, setShowLog] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!deadline) return;
+    const t = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(t);
+  }, [deadline]);
+
+  const secondsLeft = deadline ? Math.max(0, Math.ceil((deadline - now) / 1000)) : null;
 
   const me = state.players[viewer];
   const foe = state.players[viewer === 0 ? 1 : 0];
@@ -139,6 +150,9 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       {/* Ligne de statut unique */}
       <div className="top-strip">
         <span className={`turn-indicator ${myTurn ? 'my-turn' : ''}`}>{turnLabel}</span>
+        {secondsLeft !== null && state.phase !== 'finished' && (
+          <span className={`turn-timer ${secondsLeft <= 10 ? 'urgent' : ''}`}>⏱ {secondsLeft}s</span>
+        )}
         <span className="opp-stats">
           <span className="opp-name">{playerNames[foeIndex]}</span>
           <span className="hp-heart">{'♥'.repeat(Math.max(0, foe.hp))}{'♡'.repeat(Math.max(0, 2 - foe.hp))}</span>
