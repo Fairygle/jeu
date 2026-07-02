@@ -21,10 +21,11 @@ export default function AuthScreen({ onGuest }: Props) {
     setLoading(true);
     try {
       if (mode === 'signup') {
+        const redirectTo = window.location.origin + import.meta.env.BASE_URL;
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { pseudo: pseudo || email.split('@')[0] } },
+          options: { data: { pseudo: pseudo || email.split('@')[0] }, emailRedirectTo: redirectTo },
         });
         if (error) throw error;
         setInfo('Compte créé. Vérifiez votre email si la confirmation est activée, puis connectez-vous.');
