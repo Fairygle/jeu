@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
-import type { RealtimeChannel } from '@supabase/supabase-js';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import GameView from '../components/GameView';
+import ChatBox, { ChatMessage } from '../components/ChatBox';
 import { GameAction, GameState, PlayerIndex, applyAction, newGame } from '../game/engine';
 import { makeGameCode, supabase } from '../lib/supabase';
 
@@ -19,6 +19,7 @@ interface GameRow {
   guest_pseudo: string | null;
   state: GameState;
   status: 'waiting' | 'playing' | 'finished';
+  messages: ChatMessage[] | null;
 }
 
 export default function OnlineGame({ userId, pseudo, onBack }: Props) {
@@ -26,26 +27,36 @@ export default function OnlineGame({ userId, pseudo, onBack }: Props) {
   const [joinCode, setJoinCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const channelRef = useRef<RealtimeChannel | null>(null);
+  const rowRef = useRef<GameRow | null>(null);
+  rowRef.current = row;
 
-  // Abonnement temps réel à la partie en cours
+  const gameId = row?.id ?? null;
+
+  // Récupère la dernière version de la partie depuis la base
+  const refresh = useCallback(async () => {
+    if (!supabase || !rowRef.current) return;
+    const { data } = await supabase.from('games').select('*').eq('id', rowRef.current.id).maybeSingle();
+    if (data) setRow(data as GameRow);
+  }, []);
+
+  // Realtime + polling de secours (fiabilise l'arrivée de l'adversaire)
   useEffect(() => {
-    if (!row || !supabase) return;
+    if (!gameId || !supabase) return;
     const sb = supabase;
     const channel = sb
-      .channel(`game-${row.id}`)
+      .channel(`game-${gameId}`)
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'games', filter: `id=eq.${row.id}` },
+        { event: 'UPDATE', schema: 'public', table: 'games', filter: `id=eq.${gameId}` },
         (payload) => setRow(payload.new as GameRow),
       )
       .subscribe();
-    channelRef.current = channel;
+    const poll = setInterval(refresh, 2000);
     return () => {
       sb.removeChannel(channel);
+      clearInterval(poll);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [row?.id]);
+  }, [gameId, refresh]);
 
   async function createGame() {
     if (!supabase) return;
@@ -55,13 +66,7 @@ export default function OnlineGame({ userId, pseudo, onBack }: Props) {
       const code = makeGameCode();
       const { data, error } = await supabase
         .from('games')
-        .insert({
-          code,
-          host_id: userId,
-          host_pseudo: pseudo,
-          state: newGame(),
-          status: 'waiting',
-        })
+        .insert({ code, host_id: userId, host_pseudo: pseudo, state: newGame(), status: 'waiting', messages: [] })
         .select()
         .single();
       if (error) throw error;
@@ -87,6 +92,7 @@ export default function OnlineGame({ userId, pseudo, onBack }: Props) {
         .from('games')
         .update({ guest_id: userId, guest_pseudo: pseudo, status: 'playing' })
         .eq('id', data.id)
+        .eq('status', 'waiting')
         .select()
         .single();
       if (e2) throw e2;
@@ -105,13 +111,21 @@ export default function OnlineGame({ userId, pseudo, onBack }: Props) {
     try {
       const next = applyAction(row.state, me, action);
       const status = next.phase === 'finished' ? 'finished' : 'playing';
-      // Optimiste : on met à jour localement puis on pousse
       setRow({ ...row, state: next, status });
       const { error } = await supabase.from('games').update({ state: next, status }).eq('id', row.id);
       if (error) throw error;
     } catch (e: any) {
       setError(e.message);
+      refresh();
     }
+  }
+
+  async function sendMessage(text: string) {
+    if (!row || !supabase) return;
+    const msg: ChatMessage = { from: userId, name: pseudo, text, at: Date.now() };
+    const messages = [...(row.messages ?? []), msg].slice(-100);
+    setRow({ ...row, messages });
+    await supabase.from('games').update({ messages }).eq('id', row.id);
   }
 
   // ------- Lobby -------
@@ -154,7 +168,9 @@ export default function OnlineGame({ userId, pseudo, onBack }: Props) {
           <h2 className="mb">Partie créée</h2>
           <p className="muted mb">Partagez ce code avec votre adversaire :</p>
           <div className="code-badge mb">{row.code}</div>
-          <p className="muted small">En attente d'un adversaire…</p>
+          <p className="muted small">
+            En attente d'un adversaire<span className="dots" />
+          </p>
           <button className="btn btn-block mt" onClick={async () => {
             if (supabase) await supabase.from('games').delete().eq('id', row.id);
             setRow(null);
@@ -189,12 +205,17 @@ export default function OnlineGame({ userId, pseudo, onBack }: Props) {
         error={error}
       />
 
+      <ChatBox
+        messages={row.messages ?? []}
+        myId={userId}
+        onSend={sendMessage}
+        opponentName={names[me === 0 ? 1 : 0]}
+      />
+
       {s.phase === 'finished' && (
         <div className="game-over">
           <h2>{s.winner === me ? 'Victoire !' : s.winner !== null ? 'Défaite…' : 'Partie terminée'}</h2>
-          <p className="muted">
-            {s.winner !== null ? `${names[s.winner]} l'emporte.` : ''}
-          </p>
+          <p className="muted">{s.winner !== null ? `${names[s.winner]} l'emporte.` : ''}</p>
           <button className="btn btn-gold btn-lg" onClick={onBack}>Retour à l'accueil</button>
         </div>
       )}

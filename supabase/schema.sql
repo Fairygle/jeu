@@ -12,6 +12,7 @@ create table if not exists public.games (
   guest_pseudo text,
   state jsonb not null,
   status text not null default 'waiting' check (status in ('waiting', 'playing', 'finished')),
+  messages jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
