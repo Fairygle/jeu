@@ -473,3 +473,119 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   .game-layout { gap: 10px; }
   .code-badge { font-size: 21px; }
 }
+
+/* ==========================================================================
+   Roue d'actions contextuelle + barre fixe
+   ========================================================================== */
+
+.game-with-bar { padding-bottom: 76px; }
+
+.prompt.hint {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--muted);
+  padding: 8px 12px;
+  font-size: 12.5px;
+}
+
+/* Barre fixe en bas */
+.bottom-bar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  background: rgba(14, 14, 17, 0.96);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(6px);
+  z-index: 40;
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+}
+.bottom-bar-inner {
+  max-width: 980px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.bar-stats { font-size: 15px; margin-right: auto; white-space: nowrap; }
+.bottom-bar .btn { min-height: 44px; }
+
+/* Roue d'actions */
+.wheel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 8, 10, 0.82);
+  backdrop-filter: blur(3px);
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wheel {
+  position: relative;
+  width: 330px;
+  height: 330px;
+}
+.wheel-center {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 116px; height: 116px;
+  border-radius: 50%;
+  background: var(--panel);
+  border: 1px solid var(--gold-dim);
+  box-shadow: 0 0 30px rgba(201, 162, 75, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  text-align: center;
+  padding: 8px;
+}
+.wheel-room-id { font-size: 10px; color: var(--muted); letter-spacing: 0.2em; }
+.wheel-room-name { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: var(--gold-bright); line-height: 1.15; }
+
+.wheel-option {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 84px; height: 84px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, var(--panel-3), var(--panel-2));
+  border: 1px solid var(--gold-dim);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+  animation: wheel-pop 0.16s ease-out;
+}
+.wheel-option:active { background: var(--panel-3); border-color: var(--gold); }
+.wheel-icon { font-size: 22px; line-height: 1; }
+.wheel-label { font-size: 11.5px; font-weight: 700; color: var(--gold-bright); }
+.wheel-cost { font-size: 9.5px; color: var(--muted); }
+
+.wheel-close {
+  position: absolute;
+  left: 50%;
+  bottom: -54px;
+  transform: translateX(-50%);
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 16px;
+}
+
+@keyframes wheel-pop {
+  from { opacity: 0; scale: 0.7; }
+  to { opacity: 1; scale: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wheel-option { animation: none; }
+}
+@media (max-width: 380px) {
+  .wheel { width: 300px; height: 300px; }
+  .wheel-option { width: 76px; height: 76px; }
+}
