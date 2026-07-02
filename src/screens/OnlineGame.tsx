@@ -174,10 +174,10 @@ export default function OnlineGame({ userId, pseudo, onBack }: Props) {
     s.phase === 'setup' ? s.setupTurn === me : s.pending ? s.pending.responder === me : s.active === me;
 
   return (
-    <div className="container">
-      <div className="row spread mb">
-        <h2 style={{ fontSize: 18 }}>Partie {row.code}</h2>
-        <button className="btn" onClick={onBack}>← Quitter</button>
+    <div className="container game-page">
+      <div className="game-header">
+        <button className="btn btn-icon" onClick={onBack} aria-label="Quitter">←</button>
+        <span className="game-header-title">Partie {row.code}</span>
       </div>
 
       <GameView

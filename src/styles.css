@@ -589,3 +589,297 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   .wheel { width: 300px; height: 300px; }
   .wheel-option { width: 76px; height: 76px; }
 }
+
+/* ==========================================================================
+   Écran de jeu épuré — tout tient sur une page, sans défilement
+   ========================================================================== */
+
+.game-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: calc(6px + env(safe-area-inset-top)) 8px calc(6px + env(safe-area-inset-bottom));
+  overflow: hidden;
+}
+
+/* Bandeau d'état : une seule ligne fine */
+.strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 5px 8px;
+  min-height: 40px;
+  flex: none;
+}
+.strip-quit {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 15px;
+  padding: 4px 6px;
+}
+.strip-player {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  min-width: 0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border-bottom: 2px solid transparent;
+}
+.strip-player.turn { border-bottom-color: var(--gold); }
+.strip-player:last-child { margin-left: auto; }
+.strip-name {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  max-width: 76px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.strip-vs { color: var(--gold-dim); font-size: 12px; }
+.mini-badge { font-size: 11px; }
+.mini-badge.red { filter: drop-shadow(0 0 3px rgba(192, 80, 63, 0.8)); }
+
+/* Ligne d'information */
+.ticker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 7px 10px;
+  color: var(--muted);
+  font-size: 12.5px;
+  text-align: left;
+  min-height: 34px;
+  flex: none;
+}
+.ticker-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ticker-more { color: var(--gold-dim); font-size: 13px; }
+.ticker.reveal { color: var(--gold-bright); border-color: var(--gold-dim); }
+.ticker.damage { color: #e08070; border-color: var(--red-dim); }
+.ticker.system .ticker-text { color: var(--text); }
+
+/* Plateau qui remplit tout l'espace restant */
+.board-fill {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-rows: auto minmax(0, 1fr) minmax(0, 0.9fr) auto minmax(0, 1fr) minmax(0, 1fr) auto minmax(0, 0.9fr);
+  gap: 6px;
+}
+.board-fill .room {
+  min-height: 0;
+  padding: 6px;
+  justify-content: space-between;
+}
+.board-fill .room .room-name { font-size: clamp(10px, 3vw, 14px); }
+.board-fill .floor-label {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  padding: 2px 2px 0;
+  align-self: end;
+}
+
+/* Barre du bas, dans le flux (pas de recouvrement, pas de scroll) */
+.bottom-bar-flow {
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+.bottom-bar-flow .btn { flex: 1; min-height: 46px; }
+.bottom-bar-flow .btn-icon { flex: 0 0 56px; }
+
+/* Feuille d'historique */
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 8, 10, 0.85);
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.sheet {
+  width: 100%;
+  max-width: 560px;
+  max-height: 72dvh;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px 10px 0 0;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+}
+.sheet .log { max-height: none; flex: 1; overflow-y: auto; }
+
+/* ==========================================================================
+   Interface épurée — vue de jeu tenant sur un seul écran
+   ========================================================================== */
+
+.container.game-page { max-width: 640px; padding: 0; }
+.app-shell:has(.game-page) { padding: 8px 8px calc(8px + env(safe-area-inset-bottom)); }
+
+.game-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 2px 8px;
+}
+.game-header-title {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--gold-bright);
+  text-transform: uppercase;
+}
+.btn-icon { padding: 8px 12px; min-width: 40px; }
+
+/* Ligne de statut unique, remplace l'ancien HUD à deux cartes */
+.top-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+.turn-indicator {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.turn-indicator.my-turn { color: var(--gold-bright); }
+.opp-stats {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.opp-name { color: var(--muted); font-size: 11px; }
+.log-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1;
+  padding: 5px 8px;
+}
+.log-toggle:hover { border-color: var(--gold-dim); color: var(--gold); }
+
+.prompt-mini {
+  background: rgba(201, 162, 75, 0.06);
+  border: 1px solid var(--gold-dim);
+  border-radius: var(--radius);
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--gold-bright);
+  margin-bottom: 6px;
+  text-align: center;
+}
+.error-mini { padding: 6px 10px; font-size: 12px; margin-bottom: 6px; }
+
+/* Le plateau prend toute la place restante, sans panneau ni titre superflu */
+.board-wrap { padding: 2px; }
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-areas:
+    'lbl2 lbl2 lbl2 lbl2 lbl2 lbl2'
+    'n6 n6 n3 n3 n5 n5'
+    'n7 n7 n7 n7 n7 n7'
+    'lbl1 lbl1 lbl1 lbl1 lbl1 lbl1'
+    'n4 n4 n4 n1 n1 n1'
+    'n2 n2 n2 n1 n1 n1'
+    'lbl0 lbl0 lbl0 lbl0 lbl0 lbl0'
+    'n8 n8 n8 n8 n8 n8';
+  gap: 5px;
+}
+.floor-label {
+  font-size: 9px;
+  padding: 2px 2px 0;
+}
+.room {
+  min-height: 58px;
+  padding: 5px 6px;
+  gap: 1px;
+}
+.room .room-id { font-size: 8.5px; }
+.room .room-name { font-size: 11px; }
+.room .room-tags { gap: 3px; }
+.tag { font-size: 8.5px; padding: 1px 4px; }
+
+/* Journal en fenêtre modale plutôt qu'en panneau fixe */
+.log-modal {
+  width: min(420px, 92vw);
+  max-height: 70vh;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.log-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  color: var(--gold-bright);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.wheel-close-inline {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 15px;
+}
+.log-modal .log {
+  padding: 10px 12px;
+  max-height: none;
+  overflow-y: auto;
+}
+
+/* Barre du bas allégée */
+.bottom-bar-inner { gap: 8px; }
+.bar-stats { font-size: 13px; gap: 6px; display: flex; align-items: center; }
+.ap-pip { color: var(--green); font-weight: 700; }
+
+@media (max-width: 380px) {
+  .room { min-height: 52px; }
+  .board { gap: 4px; }
+}

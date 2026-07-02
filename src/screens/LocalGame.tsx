@@ -57,17 +57,18 @@ export default function LocalGame({ onBack }: Props) {
   }
 
   return (
-    <div className="container">
-      <div className="row spread mb">
-        <h2 style={{ fontSize: 18 }}>Partie locale — écran de {names[holder]}</h2>
+    <div className="container game-page">
+      <div className="game-header">
         <button
-          className="btn"
+          className="btn btn-icon"
           onClick={() => {
             if (state.phase === 'finished' || confirm('Quitter la partie en cours ?')) onBack();
           }}
+          aria-label="Quitter"
         >
-          ← Quitter
+          ←
         </button>
+        <span className="game-header-title">{names[holder]}</span>
       </div>
 
       <GameView
