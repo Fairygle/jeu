@@ -54,6 +54,7 @@ export default function ChatBox({ messages, myId, onSend, opponentName, opponent
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && submit()}
+          onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }), 250)}
           placeholder="Message…"
           maxLength={300}
         />

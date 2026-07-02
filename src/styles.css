@@ -478,7 +478,7 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
    Roue d'actions contextuelle + barre fixe
    ========================================================================== */
 
-.game-with-bar { padding-bottom: 60px; }
+.game-with-bar { padding-bottom: 0; }
 
 .prompt.hint {
   background: transparent;
@@ -736,7 +736,7 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
    Interface épurée — vue de jeu tenant sur un seul écran
    ========================================================================== */
 
-.container.game-page { max-width: 640px; padding: 0; }
+.container.game-page { max-width: 640px; padding: 0 0 calc(66px + env(safe-area-inset-bottom)); }
 .app-shell:has(.game-page) { padding: 8px 8px calc(8px + env(safe-area-inset-bottom)); }
 
 .game-header {
@@ -969,3 +969,110 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 }
 .turn-timer.urgent { color: var(--red); animation: timer-blink 1s step-end infinite; }
 @keyframes timer-blink { 50% { opacity: 0.35; } }
+
+/* ==========================================================================
+   Panneau des amis (tiroir à droite)
+   ========================================================================== */
+
+.friends-fab {
+  position: fixed;
+  right: 12px;
+  top: 12px;
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: var(--panel);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold-bright);
+  font-size: 19px;
+  box-shadow: var(--shadow);
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.chat-badge {
+  position: absolute;
+  top: -4px; right: -4px;
+  min-width: 18px; height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--red);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.friends-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 8, 10, 0.55);
+  z-index: 85;
+  display: flex;
+  justify-content: flex-end;
+}
+.friends-panel {
+  width: min(320px, 86vw);
+  height: 100%;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  animation: slide-in 0.18s ease-out;
+}
+@keyframes slide-in { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.friends-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px;
+  border-bottom: 1px solid var(--border);
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  color: var(--gold-bright);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.friends-body { flex: 1; overflow-y: auto; padding: 12px; }
+.friends-add { display: flex; gap: 6px; margin-bottom: 8px; }
+.friends-add input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 9px 11px;
+  font-size: 14px;
+}
+.friends-add input:focus { outline: none; border-color: var(--gold-dim); }
+.friends-info { font-size: 12px; color: var(--gold-bright); margin-bottom: 8px; }
+.friends-section {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+  margin: 14px 0 6px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+}
+.friend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 4px;
+  font-size: 14px;
+}
+.friend-name { color: var(--text); }
+.friends-empty { color: var(--muted); font-size: 13px; padding: 10px 4px; line-height: 1.5; }
+.mini-btn {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  font-size: 13px;
+}
+.mini-btn.ok { color: var(--green); border-color: var(--green); }
+.mini-btn.no { color: var(--muted); }

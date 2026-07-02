@@ -5,6 +5,7 @@ import HomeScreen from './screens/HomeScreen';
 import RulesScreen from './screens/RulesScreen';
 import LocalGame from './screens/LocalGame';
 import OnlineGame from './screens/OnlineGame';
+import FriendsSidebar from './components/FriendsSidebar';
 import { supabase, supabaseConfigured } from './lib/supabase';
 
 type Screen = 'home' | 'rules' | 'local' | 'online';
@@ -24,6 +25,20 @@ export default function App() {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
     return () => sub.subscription.unsubscribe();
   }, []);
+
+
+  // Présence : signale que le joueur est en ligne (liste d'amis)
+  useEffect(() => {
+    if (!supabase || !session) return;
+    const sb = supabase;
+    const me = session.user;
+    const p = (me.user_metadata?.pseudo as string | undefined) ?? me.email?.split('@')[0] ?? 'Joueur';
+    const beat = () =>
+      sb.from('profiles').upsert({ id: me.id, pseudo: p, last_seen: new Date().toISOString() }).then(() => {});
+    beat();
+    const t = setInterval(beat, 30_000);
+    return () => clearInterval(t);
+  }, [session]);
 
   if (!ready) return null;
 
@@ -67,6 +82,7 @@ export default function App() {
           />
         </>
       )}
+      {screen === 'home' && session && <FriendsSidebar userId={session.user.id} />}
       {screen === 'rules' && <RulesScreen onBack={() => setScreen('home')} />}
       {screen === 'local' && <LocalGame onBack={() => setScreen('home')} />}
       {screen === 'online' && session && (
