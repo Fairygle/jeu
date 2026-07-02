@@ -1,0 +1,457 @@
+/* ==========================================================================
+   Revolver Noir — DA inspirée de SimpleMMO
+   Fond quasi noir, panneaux à bordures fines, accents or/ambre, typo Cinzel
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #0e0e11;
+  --panel: #17171c;
+  --panel-2: #1e1e25;
+  --panel-3: #26262f;
+  --border: #2c2c36;
+  --border-lit: #4a4433;
+  --gold: #c9a24b;
+  --gold-bright: #e8c76e;
+  --gold-dim: #8a7238;
+  --text: #d8d4c8;
+  --muted: #8d897b;
+  --red: #c0503f;
+  --red-dim: #7a3228;
+  --green: #55a065;
+  --blue: #5b86b5;
+  --radius: 6px;
+  --shadow: 0 4px 18px rgba(0, 0, 0, 0.55);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root { height: 100%; }
+
+body {
+  background: var(--bg);
+  background-image: radial-gradient(1100px 500px at 50% -10%, rgba(201, 162, 75, 0.05), transparent 60%);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .display {
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.04em;
+  color: var(--gold-bright);
+}
+
+a { color: var(--gold); }
+
+button {
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+}
+
+/* ---------- Layout ---------- */
+
+.app-shell {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+}
+
+.container {
+  width: 100%;
+  max-width: 980px;
+}
+
+.topbar {
+  width: 100%;
+  max-width: 980px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0 18px;
+  gap: 10px;
+}
+
+.brand {
+  font-family: 'Cinzel', serif;
+  font-weight: 900;
+  font-size: 20px;
+  color: var(--gold-bright);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 24px rgba(201, 162, 75, 0.35);
+}
+
+.brand small { display: block; font-size: 10px; color: var(--muted); letter-spacing: 0.3em; }
+
+/* ---------- Panneaux ---------- */
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.panel-title {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--gold);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+/* ---------- Boutons ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(180deg, var(--panel-3), var(--panel-2));
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.btn:hover:not(:disabled) { border-color: var(--gold-dim); color: var(--gold-bright); }
+.btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.btn:disabled { opacity: 0.38; cursor: not-allowed; }
+
+.btn-gold {
+  background: linear-gradient(180deg, #b8913f, #8a6c2c);
+  border-color: var(--gold-dim);
+  color: #16130a;
+}
+.btn-gold:hover:not(:disabled) { background: linear-gradient(180deg, #d0a850, #9b7a33); color: #16130a; }
+
+.btn-danger { border-color: var(--red-dim); color: var(--red); }
+.btn-danger:hover:not(:disabled) { border-color: var(--red); color: #e08070; }
+
+.btn-block { width: 100%; }
+.btn-lg { padding: 15px 20px; font-size: 16px; }
+.btn.active { border-color: var(--gold); color: var(--gold-bright); background: var(--panel-3); }
+
+/* ---------- Formulaires ---------- */
+
+.field { margin-bottom: 14px; }
+.field label {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.field input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 11px 12px;
+  font-size: 15px;
+}
+.field input:focus { outline: none; border-color: var(--gold-dim); }
+
+.error-box {
+  background: rgba(192, 80, 63, 0.12);
+  border: 1px solid var(--red-dim);
+  color: #e2988c;
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+.info-box {
+  background: rgba(201, 162, 75, 0.08);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold-bright);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+/* ---------- Accueil ---------- */
+
+.hero {
+  text-align: center;
+  padding: 34px 16px 26px;
+}
+.hero h1 {
+  font-size: clamp(28px, 6vw, 46px);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.hero .tagline { color: var(--muted); margin-top: 10px; font-size: 15px; }
+.hero .rule {
+  width: 160px; height: 1px; margin: 18px auto 0;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+.mode-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.mode-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 18px;
+  text-align: left;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.mode-card:hover { border-color: var(--gold-dim); transform: translateY(-2px); }
+.mode-card h3 { font-size: 17px; margin-bottom: 8px; }
+.mode-card p { color: var(--muted); font-size: 13.5px; line-height: 1.5; }
+.mode-card .icon { font-size: 26px; margin-bottom: 10px; display: block; }
+
+/* ---------- Plateau (coupe de la maison) ---------- */
+
+/* Disposition fidèle au plan de la maison :
+   Chambre | Hall | Bibliothèque
+          Balcon
+   Cuisine |  (escalier)
+   Salle à manger | Foyer
+          Sous-sol            */
+.board {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-areas:
+    'lbl2 lbl2 lbl2 lbl2 lbl2 lbl2'
+    'n6 n6 n3 n3 n5 n5'
+    'n7 n7 n7 n7 n7 n7'
+    'lbl1 lbl1 lbl1 lbl1 lbl1 lbl1'
+    'n4 n4 n4 n1 n1 n1'
+    'n2 n2 n2 n1 n1 n1'
+    'lbl0 lbl0 lbl0 lbl0 lbl0 lbl0'
+    'n8 n8 n8 n8 n8 n8';
+  gap: 8px;
+}
+
+.floor-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  color: var(--muted);
+  padding: 4px 2px 0;
+  border-top: 1px dashed var(--border);
+}
+.floor-label.first { border-top: none; }
+
+.room {
+  position: relative;
+  min-height: 86px;
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  color: var(--text);
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+.room .room-id { font-size: 10px; color: var(--muted); letter-spacing: 0.15em; }
+.room .room-name { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: var(--text); }
+.room .room-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: auto; }
+
+.room.targetable {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold), 0 0 16px rgba(201, 162, 75, 0.25) inset;
+  cursor: pointer;
+}
+.room.targetable:hover { background: var(--panel-3); }
+.room.not-targetable { opacity: 0.85; cursor: default; }
+
+.room.basement { background: linear-gradient(180deg, #14141a, #101015); }
+.room.flooded {
+  border-color: var(--blue);
+  box-shadow: 0 0 14px rgba(91, 134, 181, 0.25) inset;
+}
+
+.tag {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+.tag.me { border-color: var(--gold); color: var(--gold-bright); font-weight: 700; }
+.tag.foe { border-color: var(--red); color: #e08070; font-weight: 700; }
+.tag.trap { border-color: var(--gold-dim); color: var(--gold); }
+.tag.delayed { border-color: var(--blue); color: var(--blue); }
+.tag.flood { border-color: var(--blue); color: var(--blue); }
+
+/* ---------- HUD ---------- */
+
+.hud {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.hud-player {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+.hud-player.active-turn { border-color: var(--gold-dim); box-shadow: 0 0 12px rgba(201, 162, 75, 0.12); }
+.hud-player .name { font-family: 'Cinzel', serif; font-size: 13px; color: var(--gold-bright); }
+.hud-player .stats { display: flex; gap: 12px; margin-top: 6px; font-size: 13px; align-items: center; flex-wrap: wrap; }
+.hp-heart { color: var(--red); letter-spacing: 2px; }
+.ap-pip { color: var(--green); letter-spacing: 2px; }
+.status { font-size: 11px; color: var(--muted); }
+.status.revealed { color: #e08070; }
+
+/* ---------- Zone de jeu ---------- */
+
+.game-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 14px;
+}
+@media (max-width: 860px) {
+  .game-layout { grid-template-columns: 1fr; }
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.actions-grid .btn { padding: 10px 8px; font-size: 13px; }
+.action-cost { font-size: 10px; color: var(--muted); font-weight: 500; }
+
+.prompt {
+  background: rgba(201, 162, 75, 0.08);
+  border: 1px solid var(--gold-dim);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: var(--gold-bright);
+}
+
+/* ---------- Journal ---------- */
+
+.log {
+  max-height: 340px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 6px;
+  font-size: 13px;
+}
+.log-entry { padding: 6px 8px; border-left: 2px solid var(--border); background: var(--bg); border-radius: 0 4px 4px 0; color: var(--muted); line-height: 1.4; }
+.log-entry.damage { border-left-color: var(--red); color: #dba79e; }
+.log-entry.reveal { border-left-color: var(--gold); color: var(--gold-bright); }
+.log-entry.system { border-left-color: var(--blue); color: #a9bed6; }
+
+/* ---------- Passage de main (mode local) ---------- */
+
+.handoff {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 8, 10, 0.97);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  z-index: 50;
+  padding: 24px;
+  text-align: center;
+}
+.handoff h2 { font-size: 26px; }
+.handoff p { color: var(--muted); max-width: 420px; line-height: 1.5; }
+
+/* ---------- Fin de partie ---------- */
+
+.game-over {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 8, 10, 0.94);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 60;
+  text-align: center;
+  padding: 24px;
+}
+.game-over h2 { font-size: 34px; text-transform: uppercase; }
+
+/* ---------- Règles ---------- */
+
+.rules-content h3 { margin: 18px 0 8px; font-size: 16px; }
+.rules-content p, .rules-content li { color: var(--muted); font-size: 14px; line-height: 1.65; }
+.rules-content ul { padding-left: 20px; margin: 6px 0; }
+.rules-content strong { color: var(--text); }
+
+/* ---------- Divers ---------- */
+
+.center-page {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.auth-card { width: 100%; max-width: 400px; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.mt { margin-top: 14px; }
+.mb { margin-bottom: 14px; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.spread { justify-content: space-between; }
+.code-badge {
+  font-family: 'Cinzel', serif;
+  font-size: 26px;
+  letter-spacing: 0.35em;
+  color: var(--gold-bright);
+  border: 1px dashed var(--gold-dim);
+  border-radius: var(--radius);
+  padding: 12px 18px 12px 24px;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+@media (max-width: 520px) {
+  .app-shell { padding: 10px; }
+  .panel { padding: 12px; }
+  .room { min-height: 74px; }
+  .actions-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ---------- Illustration d'accueil ---------- */
+.hero-map {
+  width: min(340px, 80%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 18px;
+}
