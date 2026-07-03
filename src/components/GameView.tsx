@@ -158,7 +158,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
           <span className={`turn-timer ${secondsLeft <= 10 ? 'urgent' : ''}`}>⏱ {secondsLeft}s</span>
         )}
         <span className="opp-stats">
-          <span className="opp-name">{playerNames[foeIndex]}</span>
+          <span className="avatar foe" title={playerNames[foeIndex]}>{(playerNames[foeIndex] || 'A')[0].toUpperCase()}</span>
           <span className="hp-heart">{'♥'.repeat(Math.max(0, foe.hp))}{'♡'.repeat(Math.max(0, 2 - foe.hp))}</span>
           {foe.revealedUntilMove && <span className="status revealed">révélé</span>}
         </span>
@@ -210,6 +210,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       <div className="bottom-bar">
         <div className="bottom-bar-inner">
           <span className="bar-stats">
+            <span className="avatar me" title={playerNames[viewer]}>{(playerNames[viewer] || 'V')[0].toUpperCase()}</span>
             <span className="hp-heart">{'♥'.repeat(Math.max(0, me.hp))}{'♡'.repeat(Math.max(0, 2 - me.hp))}</span>
             <span className="ap-pip">⚡{me.ap}</span>
             {me.freeMoveAvailable && <span className="status" style={{ color: 'var(--gold)' }}>repli</span>}
