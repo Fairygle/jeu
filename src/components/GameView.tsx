@@ -63,6 +63,26 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
     return [];
   }, [state, canAct, isSetup, pendingForMe, me.room]);
 
+  /** Les vraies portes depuis la pièce actuelle — pour la légende et le repère 🚪 */
+  const neighborRooms: RoomId[] = useMemo(() => {
+    if (pendingForMe && state.pending) {
+      if (state.pending.kind === 'listen') return me.room ? ADJACENCY[me.room] : [];
+      return state.pending.options;
+    }
+    if (myTurn && me.room !== null) {
+      return ADJACENCY[me.room].filter((r) => !(state.basementFlood.active && r === 8));
+    }
+    return [];
+  }, [state, pendingForMe, myTurn, me.room]);
+
+  const legendText: string | null = useMemo(() => {
+    const names = neighborRooms.map((r) => ROOMS[r].name).join(', ');
+    if (myTurn && me.room !== null && neighborRooms.length > 0) return `Depuis ${ROOMS[me.room].name} → ${names}`;
+    if (pendingForMe && state.pending?.kind === 'listen' && neighborRooms.length > 0) return `Pièces voisines : ${names}`;
+    if (pendingForMe && state.pending?.kind === 'escape' && neighborRooms.length > 0) return `Fuyez vers : ${names}`;
+    return null;
+  }, [neighborRooms, myTurn, me.room, pendingForMe, state.pending]);
+
   function optionsFor(room: RoomId): WheelOption[] {
     if (!myTurn || me.room === null) return [];
     const opts: WheelOption[] = [];
@@ -186,6 +206,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
         </div>
       )}
       {error && <div className="error-box error-mini">{error}</div>}
+      {legendText && <div className="legend-banner">{legendText}</div>}
 
 
       {/* Dernière action, bien visible */}
@@ -325,10 +346,12 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
     const flooded = state.basementFlood.active && id === 8;
     const showMe = me.room === id && !isSetup;
     const showFoe = foe.room === id && (foe.revealedUntilMove || state.phase === 'finished');
+    const isCurrent = me.room === id && !isSetup;
+    const isNeighbor = neighborRooms.includes(id);
     return (
       <button
         key={id}
-        className={`room ${id === 8 ? 'basement' : ''} ${flooded ? 'flooded' : ''} ${clickable ? 'targetable' : 'not-targetable'}`}
+        className={`room ${id === 8 ? 'basement' : ''} ${flooded ? 'flooded' : ''} ${clickable ? 'targetable' : 'not-targetable'} ${isCurrent ? 'current' : ''} ${isNeighbor ? 'neighbor' : ''}`}
         style={{ gridArea: area }}
         onClick={() => clickRoom(id)}
         aria-label={ROOMS[id].name}

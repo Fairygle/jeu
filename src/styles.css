@@ -1377,8 +1377,43 @@ input::placeholder { color: #9a938a; }
 
 /* Plateau : pièces = petites cartes */
 .room { box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.8); }
-.room.targetable { outline: 2px dashed var(--red); outline-offset: -6px; }
 .room.flooded { background: linear-gradient(160deg, #dfe7ee, #c9d6e2); }
+
+/* Ciblage : sobre, sans pointillé — juste une carte qui "sort" un peu */
+.room.targetable {
+  box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.85);
+}
+.room.not-targetable { opacity: 0.5; }
+
+/* Pièce actuelle du joueur : cadre distinct pour se repérer */
+.room.current {
+  background: linear-gradient(160deg, #fbf3df, #ecdfba) !important;
+  border-width: 3px !important;
+}
+
+/* Passages accessibles depuis la pièce actuelle : repère "porte" */
+.room.neighbor {
+  border-width: 3px;
+}
+.room.neighbor::after {
+  content: '🚪';
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+/* Légende des passages, toujours lisible */
+.legend-banner {
+  font-size: 12.5px;
+  padding: 7px 10px;
+  margin-bottom: 6px;
+  background: rgba(230, 222, 205, 0.6);
+  border: 2px solid #16120c;
+  color: #16120c;
+}
+.legend-banner strong { text-decoration: underline; text-decoration-style: dotted; }
 
 /* Jetons ronds de personnage */
 .token {
