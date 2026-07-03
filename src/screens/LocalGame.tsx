@@ -40,7 +40,7 @@ export default function LocalGame({ onBack }: Props) {
       <div className="handoff">
         <h2>Passez l'appareil</h2>
         <p>
-          Au tour de <strong style={{ color: 'var(--gold-bright)' }}>{names[handoff]}</strong>. Les autres, détournez le
+          Au tour de <strong>{names[handoff]}</strong>. Les autres, détournez le
           regard — la maison garde ses secrets.
         </p>
         <button

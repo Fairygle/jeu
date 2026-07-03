@@ -395,7 +395,11 @@ button {
 .handoff {
   position: fixed;
   inset: 0;
-  background: rgba(8, 8, 10, 0.97);
+  background-color: #e2d9c3;
+  background-image:
+    radial-gradient(circle at 25% 15%, rgba(120, 96, 54, 0.08) 0%, transparent 12%),
+    radial-gradient(circle at 80% 30%, rgba(100, 78, 42, 0.07) 0%, transparent 14%),
+    radial-gradient(ellipse at 50% 40%, #f0ebdd 0%, #e2d9c3 60%, #d3c7ac 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -405,8 +409,9 @@ button {
   padding: 24px;
   text-align: center;
 }
-.handoff h2 { font-size: 26px; }
-.handoff p { color: var(--muted); max-width: 420px; line-height: 1.5; }
+.handoff h2 { font-size: 24px; color: #16120c; }
+.handoff p { color: #5c5445; max-width: 420px; line-height: 1.5; }
+.handoff strong { color: #16120c; }
 
 /* ---------- Fin de partie ---------- */
 
@@ -531,87 +536,98 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .bar-stats { font-size: 15px; margin-right: auto; white-space: nowrap; }
 .bottom-bar .btn { min-height: 44px; }
 
-/* Roue d'actions */
+/* Fond assombri — réservé aux modales (règles, journal), pas à la roue */
 .wheel-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(8, 8, 10, 0.82);
-  backdrop-filter: blur(3px);
+  background: rgba(8, 8, 10, 0.72);
+  backdrop-filter: blur(2px);
   z-index: 70;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
+/* Roue d'actions — ancrée sur la pièce, pas de popup assombri */
+.wheel-catcher {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: transparent;
+}
 .wheel {
-  position: relative;
-  width: 330px;
-  height: 330px;
+  position: fixed;
+  width: 0;
+  height: 0;
+  transform: translate(-50%, -50%);
 }
 .wheel-center {
   position: absolute;
-  left: 50%; top: 50%;
+  left: 0; top: 0;
   transform: translate(-50%, -50%);
-  width: 116px; height: 116px;
+  width: 96px; height: 96px;
   border-radius: 50%;
-  background: var(--panel);
-  border: 1px solid var(--gold-dim);
-  box-shadow: 6px 6px 0 rgba(16, 16, 16, 0.85);
+  background: linear-gradient(160deg, #ffffff, #ece5d4);
+  border: 3px solid #16120c;
+  box-shadow: 4px 5px 0 rgba(16, 16, 16, 0.85);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 2px;
   text-align: center;
-  padding: 8px;
+  padding: 6px;
+  pointer-events: none;
 }
 .wheel-room-id { font-size: 10px; color: var(--muted); letter-spacing: 0.2em; }
-.wheel-room-name { font-family: 'Special Elite', 'Courier New', monospace; font-size: 13px; font-weight: 700; color: var(--gold-bright); line-height: 1.15; }
+.wheel-room-name { font-family: 'Special Elite', 'Courier New', monospace; font-size: 12px; font-weight: 700; color: #16120c; line-height: 1.15; }
 
 .wheel-option {
   position: absolute;
-  left: 50%; top: 50%;
-  width: 84px; height: 84px;
+  left: 0; top: 0;
+  width: 78px; height: 78px;
   border-radius: 50%;
-  background: linear-gradient(180deg, var(--panel-3), var(--panel-2));
-  border: 1px solid var(--gold-dim);
-  color: var(--text);
+  background: linear-gradient(160deg, #ffffff, #ece5d4);
+  border: 2px solid #16120c;
+  color: #16120c;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 1px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
-  animation: wheel-pop 0.16s ease-out;
+  box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.75);
+  animation: wheel-pop 0.14s ease-out;
 }
-.wheel-option:active { background: var(--panel-3); border-color: var(--gold); }
-.wheel-icon { font-size: 22px; line-height: 1; }
-.wheel-label { font-size: 11.5px; font-weight: 700; color: var(--gold-bright); }
-.wheel-cost { font-size: 9.5px; color: var(--muted); }
+.wheel-option:active { transform: translate(calc(-50% + var(--tx, 0px)), calc(-50% + var(--ty, 0px))) scale(0.94); }
+.wheel-icon { font-size: 20px; line-height: 1; }
+.wheel-label { font-size: 10.5px; font-weight: 700; color: #16120c; }
+.wheel-cost { font-size: 9px; color: var(--muted); }
 
 .wheel-close {
   position: absolute;
-  left: 50%;
-  bottom: -54px;
-  transform: translateX(-50%);
-  width: 42px; height: 42px;
+  left: 0; top: 0;
+  transform: translate(-50%, calc(-50% + 150px));
+  width: 40px; height: 40px;
   border-radius: 50%;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  color: var(--muted);
-  font-size: 16px;
+  background: #f4efe3;
+  border: 2px solid #16120c;
+  color: #16120c;
+  font-size: 15px;
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.7);
 }
 
 @keyframes wheel-pop {
-  from { opacity: 0; scale: 0.7; }
+  from { opacity: 0; scale: 0.6; }
   to { opacity: 1; scale: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
   .wheel-option { animation: none; }
 }
 @media (max-width: 380px) {
-  .wheel { width: 300px; height: 300px; }
-  .wheel-option { width: 76px; height: 76px; }
+  .wheel-center { width: 84px; height: 84px; }
+  .wheel-option { width: 70px; height: 70px; }
 }
+
 
 /* ==========================================================================
    Écran de jeu épuré — tout tient sur une page, sans défilement

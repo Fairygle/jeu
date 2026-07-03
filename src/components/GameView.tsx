@@ -35,6 +35,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       .replace(/[Ll]e joueur ([12])/g, (_, d) => playerNames[Number(d) - 1])
       .replace(/[Jj]oueur ([12])/g, (_, d) => playerNames[Number(d) - 1]);
   const [wheelRoom, setWheelRoom] = useState<RoomId | null>(null);
+  const [wheelAnchor, setWheelAnchor] = useState<{ x: number; y: number; side: 'left' | 'right' } | null>(null);
   const [showLog, setShowLog] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -148,9 +149,31 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
     if (optionsFor(room).length > 0) setWheelRoom(room);
   }
 
+  /** Ouvre la roue directement sur la pièce touchée, avec un arc orienté
+   *  vers le centre de l'écran pour rester visible. */
+  function clickRoomEl(room: RoomId, el: HTMLButtonElement) {
+    clickRoom(room);
+    if (isSetup || pendingForMe) return;
+    if (optionsFor(room).length === 0) return;
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const side: 'left' | 'right' = cx > window.innerWidth / 2 ? 'left' : 'right';
+    const margin = 152;
+    const x = Math.min(Math.max(cx, margin), window.innerWidth - margin);
+    const y = Math.min(Math.max(cy, margin), window.innerHeight - margin);
+    setWheelAnchor({ x, y, side });
+  }
+
   function pick(opt: WheelOption) {
     setWheelRoom(null);
+    setWheelAnchor(null);
     onAction(opt.action);
+  }
+
+  function closeWheel() {
+    setWheelRoom(null);
+    setWheelAnchor(null);
   }
 
   const visibleLog = state.log.filter((e) => e.visibility === 'both' || e.visibility === viewer);
@@ -259,18 +282,27 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
         </div>
       </div>
 
-      {/* Roue d'actions */}
-      {wheelRoom !== null && wheelOptions.length > 0 && (
-        <div className="wheel-overlay" onClick={() => setWheelRoom(null)}>
-          <div className="wheel" onClick={(e) => e.stopPropagation()}>
+      {/* Roue d'actions — ancrée sur la pièce touchée, sans fond de popup */}
+      {wheelRoom !== null && wheelOptions.length > 0 && wheelAnchor && (
+        <div className="wheel-catcher" onClick={closeWheel}>
+          <div
+            className={`wheel wheel-anchored ${wheelAnchor.side}`}
+            style={{ left: wheelAnchor.x, top: wheelAnchor.y }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="wheel-center">
               <span className="wheel-room-name">{ROOMS[wheelRoom].name}</span>
             </div>
             {wheelOptions.map((opt, i) => {
-              const angle = (i / wheelOptions.length) * 2 * Math.PI - Math.PI / 2;
-              const r = 118;
-              const x = Math.cos(angle) * r;
-              const y = Math.sin(angle) * r;
+              const n = wheelOptions.length;
+              const facing = wheelAnchor.side === 'left' ? 180 : 0;
+              const span = n > 1 ? Math.min(160, 46 * (n - 1)) : 0;
+              const start = facing - span / 2;
+              const deg = n > 1 ? start + (i / (n - 1)) * span : facing;
+              const rad = (deg * Math.PI) / 180;
+              const r = 108;
+              const x = Math.cos(rad) * r;
+              const y = Math.sin(rad) * r;
               return (
                 <button
                   key={i}
@@ -284,7 +316,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
                 </button>
               );
             })}
-            <button className="wheel-close" onClick={() => setWheelRoom(null)}>✕</button>
+            <button className="wheel-close" onClick={closeWheel}>✕</button>
           </div>
         </div>
       )}
@@ -353,7 +385,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
         key={id}
         className={`room ${id === 8 ? 'basement' : ''} ${flooded ? 'flooded' : ''} ${clickable ? 'targetable' : 'not-targetable'} ${isCurrent ? 'current' : ''} ${isNeighbor ? 'neighbor' : ''}`}
         style={{ gridArea: area }}
-        onClick={() => clickRoom(id)}
+        onClick={(e) => clickRoomEl(id, e.currentTarget)}
         aria-label={ROOMS[id].name}
       >
         <span className="room-name">{ROOMS[id].name}</span>
