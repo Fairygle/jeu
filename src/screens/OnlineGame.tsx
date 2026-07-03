@@ -9,7 +9,8 @@ interface Props {
   userId: string;
   pseudo: string;
   onBack: () => void;
-  initialMode?: 'quick' | 'code';
+  initialMode?: 'code' | 'join';
+  initialRow?: GameRow | null;
 }
 
 interface Meta {
@@ -58,8 +59,8 @@ function autoAction(s: GameState, who: PlayerIndex): GameAction {
   return { type: 'end_turn' };
 }
 
-export default function OnlineGame({ userId, pseudo, onBack, initialMode = 'code' }: Props) {
-  const [row, setRow] = useState<GameRow | null>(null);
+export default function OnlineGame({ userId, pseudo, onBack, initialMode = 'code', initialRow = null }: Props) {
+  const [row, setRow] = useState<GameRow | null>(initialRow);
   const [joinCode, setJoinCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -193,13 +194,13 @@ export default function OnlineGame({ userId, pseudo, onBack, initialMode = 'code
     }
   }
 
-  // Depuis l'accueil, "Partie rapide" saute directement à la recherche
+  // Depuis l'accueil : "Créer → code multi" crée le salon immédiatement
   useEffect(() => {
-    if (initialMode === 'quick' && !autoQuickTried.current && !row && !foundGame) {
+    if (initialMode === 'code' && !initialRow && !autoQuickTried.current && !row) {
       autoQuickTried.current = true;
-      searchGame();
+      createGame(false);
     }
-  }, [initialMode, row, foundGame]);
+  }, [initialMode, row]);
 
   async function confirmJoin(target: GameRow) {
     if (!supabase) return;
@@ -325,10 +326,6 @@ export default function OnlineGame({ userId, pseudo, onBack, initialMode = 'code
             <button className="btn btn-icon" onClick={onBack} aria-label="Retour">←</button>
           </div>
           {error && <div className="error-box">{error}</div>}
-          <button className="btn btn-gold btn-block btn-lg" onClick={() => createGame(false)} disabled={busy}>
-            Créer un salon (code)
-          </button>
-          <div className="lobby-sep">ou</div>
           <div className="row" style={{ gap: 8 }}>
             <input
               className="lobby-code-input"

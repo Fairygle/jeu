@@ -20,6 +20,7 @@ export interface PlayerState {
   hp: number;
   ap: number;
   freeMoveAvailable: boolean; // repli gratuit après un tir
+  kitchenBonus?: boolean; // ravitaillement de la Cuisine disponible ce tour (à activer)
   revealedUntilMove: boolean;
   traps: RoomId[]; // pièges simples armés (visibles par le propriétaire)
   delayedTraps: RoomId[]; // pièges retardés (Sous-sol), déclenchés au début du prochain tour
@@ -160,17 +161,23 @@ function startTurn(s: GameState) {
     });
   }
 
-  // Ravitaillement de la Cuisine (§5.1)
-  p.ap = p.room === KITCHEN ? 3 : 2;
+  // Ravitaillement de la Cuisine : disponible, mais à activer par le joueur (§5.1)
+  p.ap = 2;
+  p.kitchenBonus = p.room === KITCHEN;
   pushLog(s, {
     actor: i,
-    text:
-      p.room === KITCHEN
-        ? `Tour ${s.turnNumber} — Joueur ${i + 1} : ravitaillement en Cuisine, 3 PA.`
-        : `Tour ${s.turnNumber} — Joueur ${i + 1} : 2 PA.`,
+    text: `Tour ${s.turnNumber} — Joueur ${i + 1} : 2 PA.`,
     visibility: 'both',
     kind: 'system',
   });
+  if (p.kitchenBonus) {
+    pushLog(s, {
+      actor: i,
+      text: 'Ravitaillement disponible en Cuisine (à activer, gratuit).',
+      visibility: i,
+      kind: 'info',
+    });
+  }
 
   // Déclenchement automatique des pièges retardés (§5.6, §6.2)
   if (p.delayedTraps.length > 0) {
@@ -283,8 +290,10 @@ export function roomEffectCost(s: GameState, i: PlayerIndex): number | null {
       return 1;
     case 8: // Sous-sol — dispositif retardé
       return p.traps.length + p.delayedTraps.length < MAX_TRAPS ? 1 : null;
+    case 4: // Cuisine — ravitaillement à activer (gratuit)
+      return p.kitchenBonus ? 0 : null;
     default:
-      return null; // Cuisine (passif), Hall, Salle à manger
+      return null; // Hall, Salle à manger
   }
 }
 
@@ -468,6 +477,12 @@ export function applyAction(prev: GameState, actor: PlayerIndex, action: GameAct
         visibility: actor,
         kind: 'info',
       });
+      pushLog(s, {
+        actor,
+        text: `Le joueur ${actor + 1} pose un piège…`,
+        visibility: other(actor) as Visibility,
+        kind: 'info',
+      });
       break;
     }
 
@@ -497,6 +512,20 @@ export function applyAction(prev: GameState, actor: PlayerIndex, action: GameAct
       if (p.ap < cost) throw new Error('PA insuffisants.');
 
       switch (p.room) {
+        case 4: {
+          // Cuisine — ravitaillement (§5.1), gratuit, à activer
+          if (!p.kitchenBonus) throw new Error('Ravitaillement indisponible.');
+          p.kitchenBonus = false;
+          p.ap += 1;
+          p.revealedUntilMove = true;
+          pushLog(s, {
+            actor,
+            text: `Le joueur ${actor + 1} se ravitaille en Cuisine : 3 PA ce tour.`,
+            visibility: 'both',
+            kind: 'reveal',
+          });
+          break;
+        }
         case 1: {
           // Foyer — échos (§5.5)
           p.revealedUntilMove = true;

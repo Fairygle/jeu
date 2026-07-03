@@ -5,17 +5,17 @@ import HomeScreen from './screens/HomeScreen';
 import RulesScreen from './screens/RulesScreen';
 import LocalGame from './screens/LocalGame';
 import OnlineGame from './screens/OnlineGame';
-import FriendsSidebar from './components/FriendsSidebar';
 import { supabase, supabaseConfigured } from './lib/supabase';
 
 type Screen = 'home' | 'rules' | 'local' | 'online';
-type OnlineMode = 'quick' | 'code';
+type OnlineMode = 'code' | 'join';
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [guest, setGuest] = useState(false);
   const [screen, setScreen] = useState<Screen>('home');
   const [onlineMode, setOnlineMode] = useState<OnlineMode>('code');
+  const [activeRow, setActiveRow] = useState<any>(null);
   const [ready, setReady] = useState(!supabaseConfigured);
 
   useEffect(() => {
@@ -78,11 +78,18 @@ export default function App() {
             pseudo={pseudo}
             userId={session?.user.id ?? null}
             onLocal={() => setScreen('local')}
-            onQuickMatch={() => {
-              setOnlineMode('quick');
+            onCreateCode={() => {
+              setOnlineMode('code');
+              setActiveRow(null);
               setScreen('online');
             }}
-            onCreateCode={() => {
+            onJoinCode={() => {
+              setOnlineMode('join');
+              setActiveRow(null);
+              setScreen('online');
+            }}
+            onEnterGame={(row) => {
+              setActiveRow(row);
               setOnlineMode('code');
               setScreen('online');
             }}
@@ -92,7 +99,6 @@ export default function App() {
           />
         </>
       )}
-      {screen === 'home' && session && <FriendsSidebar userId={session.user.id} />}
       {screen === 'rules' && <RulesScreen onBack={() => setScreen('home')} />}
       {screen === 'local' && <LocalGame onBack={() => setScreen('home')} />}
       {screen === 'online' && session && (
@@ -101,6 +107,7 @@ export default function App() {
           pseudo={pseudo ?? 'Joueur'}
           onBack={() => setScreen('home')}
           initialMode={onlineMode}
+          initialRow={activeRow}
         />
       )}
     </div>

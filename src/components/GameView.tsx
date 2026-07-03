@@ -22,12 +22,18 @@ interface WheelOption {
 
 const EFFECT_INFO: Partial<Record<RoomId, { icon: string; label: string }>> = {
   1: { icon: '🔔', label: 'Échos' },
+  4: { icon: '🍲', label: 'Ravitailler' },
   5: { icon: '🕳️', label: 'Trappe' },
   6: { icon: '🌊', label: 'Inonder' },
   7: { icon: '🪂', label: 'Sauter' },
 };
 
 export default function GameView({ state, viewer, canAct, onAction, playerNames, error, deadline }: Props) {
+  /** Journal façon partie parlée : les pseudos remplacent "Joueur 1/2". */
+  const named = (text: string) =>
+    text
+      .replace(/[Ll]e joueur ([12])/g, (_, d) => playerNames[Number(d) - 1])
+      .replace(/[Jj]oueur ([12])/g, (_, d) => playerNames[Number(d) - 1]);
   const [wheelRoom, setWheelRoom] = useState<RoomId | null>(null);
   const [showLog, setShowLog] = useState(false);
   const [showRules, setShowRules] = useState(false);
@@ -154,6 +160,9 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       {/* Ligne de statut unique */}
       <div className="top-strip">
         <span className={`turn-indicator ${myTurn ? 'my-turn' : ''}`}>{turnLabel}</span>
+        {state.phase === 'playing' && !state.pending && (
+          <span className="ap-strip">⚡{state.players[state.active].ap}</span>
+        )}
         {secondsLeft !== null && state.phase !== 'finished' && (
           <span className={`turn-timer ${secondsLeft <= 10 ? 'urgent' : ''}`}>⏱ {secondsLeft}s</span>
         )}
@@ -184,7 +193,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
         <div className="ticker">
           {lastEvents.map((e, i) => (
             <div key={`${e.turn}-${e.text}-${i}`} className={`ticker-line ${e.kind ?? ''} ${i === lastEvents.length - 1 ? 'latest' : ''}`}>
-              {e.text}
+              {named(e.text)}
             </div>
           ))}
         </div>
@@ -280,7 +289,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
               <p>💥 <strong>Déclencher</strong> (1⚡) — active votre piège : −1♥ si l'adversaire y est.</p>
               <div className="rules-quick-section">Effets des pièces</div>
               <p>🔔 <strong>Foyer</strong> (gratuit) — révèle l'adversaire s'il est à l'étage, sinon il indique une pièce voisine.</p>
-              <p>🍲 <strong>Cuisine</strong> — 3⚡ si vous y commencez votre tour.</p>
+              <p>🍲 <strong>Cuisine</strong> (gratuit) — si vous y commencez votre tour, activez le ravitaillement : +1⚡ (vous êtes révélé).</p>
               <p>🕳️ <strong>Bibliothèque</strong> (1⚡) — un adversaire en Cuisine chute au Sous-sol.</p>
               <p>🌊 <strong>Chambre</strong> (1⚡) — inonde le Sous-sol : −1♥ à qui s'y trouve, accès bloqué un tour.</p>
               <p>🪂 <strong>Balcon</strong> (gratuit) — saut vers la Cuisine, vous êtes révélé.</p>

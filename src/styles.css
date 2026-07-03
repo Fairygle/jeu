@@ -998,10 +998,9 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
    ========================================================================== */
 
 .friends-fab {
-  position: fixed;
-  right: 12px;
-  top: 12px;
-  width: 46px; height: 46px;
+  position: relative;
+  flex-shrink: 0;
+  width: 42px; height: 42px;
   border-radius: 50%;
   background: var(--panel);
   border: 1px solid var(--gold-dim);
@@ -1037,7 +1036,7 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   justify-content: flex-end;
 }
 .friends-panel {
-  width: min(320px, 86vw);
+  width: min(250px, 74vw);
   height: 100%;
   background: var(--panel);
   border-left: 1px solid var(--border);
@@ -1435,3 +1434,22 @@ input::placeholder { color: #9a938a; }
 }
 .avatar.me { background: #101010; color: var(--ink-light); }
 .avatar.foe { background: #ffffff; color: var(--red); border-color: var(--red); box-shadow: 2px 2px 0 rgba(163, 35, 29, 0.4); }
+
+/* Trois boutons de mode + confirmation de match */
+.mode-row.three { grid-template-columns: 1fr 1fr 1fr; }
+.mode-row.three .mode-btn { padding: 12px 4px; font-size: 12px; }
+.mode-btn.busy { animation: pulse-btn 1.6s ease-in-out infinite; }
+@keyframes pulse-btn { 50% { opacity: 0.72; } }
+
+.match-confirm {
+  background: linear-gradient(160deg, #ffffff, var(--panel));
+  border: 2px solid var(--border);
+  padding: 12px;
+  margin-bottom: 10px;
+  box-shadow: 3px 4px 0 rgba(0, 0, 0, 0.85);
+}
+.match-confirm p { margin-bottom: 10px; font-size: 14px; }
+.match-confirm strong { color: var(--red); }
+
+.online-count { color: var(--green); white-space: nowrap; }
+.ap-strip { font-size: 12px; font-weight: 700; white-space: nowrap; }
