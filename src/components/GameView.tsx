@@ -149,18 +149,21 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
     if (optionsFor(room).length > 0) setWheelRoom(room);
   }
 
-  /** Ouvre la roue directement sur la pièce touchée, avec un arc orienté
-   *  vers le centre de l'écran pour rester visible. */
-  function clickRoomEl(room: RoomId, el: HTMLButtonElement) {
+  /** Ouvre la roue centrée sur le point touché. */
+  function clickRoomEl(room: RoomId, e: React.MouseEvent<HTMLButtonElement>) {
     clickRoom(room);
     if (isSetup || pendingForMe) return;
     if (optionsFor(room).length === 0) return;
-    const token = me.room === room ? el.querySelector('.token.me') : null;
-    const rect = (token ?? el).getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
+    // Point de toucher exact ; repli sur le centre de la pièce (clavier)
+    let cx = e.clientX;
+    let cy = e.clientY;
+    if (!cx && !cy) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      cx = rect.left + rect.width / 2;
+      cy = rect.top + rect.height / 2;
+    }
     const side: 'left' | 'right' = cx > window.innerWidth / 2 ? 'left' : 'right';
-    const margin = 136;
+    const margin = 122;
     const x = Math.min(Math.max(cx, margin), window.innerWidth - margin);
     const y = Math.min(Math.max(cy, margin), window.innerHeight - margin);
     setWheelAnchor({ x, y, side });
@@ -253,6 +256,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
           {renderRoom('n7', 7)}
           <div className="floor-label" style={{ gridArea: 'lbl1' }}>Rez-de-chaussée</div>
           <div className="stair stair-left" aria-hidden="true" />
+          <div className="stair stair-mid" aria-hidden="true" />
           <div className="stair stair-right" aria-hidden="true" />
           {renderRoom('n4', 4)}
           {renderRoom('n1', 1)}
@@ -299,7 +303,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
               // haut, droite, bas, gauche). Départ en haut.
               const deg = -90 + (i / n) * 360;
               const rad = (deg * Math.PI) / 180;
-              const r = 92;
+              const r = 80;
               const x = Math.cos(rad) * r;
               const y = Math.sin(rad) * r;
               return (
@@ -384,7 +388,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
         key={id}
         className={`room ${id === 8 ? 'basement' : ''} ${flooded ? 'flooded' : ''} ${clickable ? 'targetable' : 'not-targetable'} ${isCurrent ? 'current' : ''} ${isNeighbor ? 'neighbor' : ''}`}
         style={{ gridArea: area }}
-        onClick={(e) => clickRoomEl(id, e.currentTarget)}
+        onClick={(e) => clickRoomEl(id, e)}
         aria-label={ROOMS[id].name}
       >
         <span className="room-name">{ROOMS[id].name}</span>

@@ -259,10 +259,10 @@ button {
     'lbl2 lbl2 lbl2 lbl2 lbl2 lbl2 lbl2 lbl2'
     'n6 n6 n6 n3 n3 n5 n5 n5'
     'sL n7 n7 n7 n7 n7 n7 sR'
-    'sL lbl1 lbl1 lbl1 lbl1 lbl1 lbl1 sR'
+    'sL lbl1 lbl1 lbl1 lbl1 sM . sR'
     'n4 n4 n4 n4 n1 n1 n1 sR'
     'n2 n2 n2 n2 n1 n1 n1 sR'
-    'lbl0 lbl0 lbl0 lbl0 lbl0 lbl0 lbl0 lbl0'
+    'lbl0 lbl0 lbl0 lbl0 lbl0 lbl0 lbl0 sR'
     'n8 n8 n8 n8 n8 n8 n8 n8';
   gap: 8px;
 }
@@ -282,7 +282,12 @@ button {
   min-width: 0;
 }
 .stair-left { grid-area: sL; }
-.stair-right { grid-area: sR; }
+.stair-right { grid-area: sR; margin-bottom: -14px; } /* descend jusqu'au Sous-sol */
+.stair-mid {
+  grid-area: sM;
+  margin: -14px 0; /* touche le Balcon au-dessus et le Foyer en dessous */
+  min-height: 26px;
+}
 
 .floor-label {
   font-size: 10px;
@@ -623,8 +628,8 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .wheel-close {
   position: absolute;
   left: 0; top: 0;
-  transform: translate(-50%, calc(-50% + 158px));
-  width: 40px; height: 40px;
+  transform: translate(-50%, -50%);
+  width: 46px; height: 46px;
   border-radius: 50%;
   background: #f4efe3;
   border: 2px solid #16120c;
@@ -873,10 +878,10 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
     'lbl2 lbl2 lbl2 lbl2 lbl2 lbl2 lbl2 lbl2'
     'n6 n6 n6 n3 n3 n5 n5 n5'
     'sL n7 n7 n7 n7 n7 n7 sR'
-    'sL lbl1 lbl1 lbl1 lbl1 lbl1 lbl1 sR'
+    'sL lbl1 lbl1 lbl1 lbl1 sM . sR'
     'n4 n4 n4 n4 n1 n1 n1 sR'
     'n2 n2 n2 n2 n1 n1 n1 sR'
-    'lbl0 lbl0 lbl0 lbl0 lbl0 lbl0 lbl0 lbl0'
+    'lbl0 lbl0 lbl0 lbl0 lbl0 lbl0 lbl0 sR'
     'n8 n8 n8 n8 n8 n8 n8 n8';
   gap: 5px;
 }
