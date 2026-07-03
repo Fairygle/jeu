@@ -155,11 +155,12 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
     clickRoom(room);
     if (isSetup || pendingForMe) return;
     if (optionsFor(room).length === 0) return;
-    const rect = el.getBoundingClientRect();
+    const token = me.room === room ? el.querySelector('.token.me') : null;
+    const rect = (token ?? el).getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
     const side: 'left' | 'right' = cx > window.innerWidth / 2 ? 'left' : 'right';
-    const margin = 152;
+    const margin = 136;
     const x = Math.min(Math.max(cx, margin), window.innerWidth - margin);
     const y = Math.min(Math.max(cy, margin), window.innerHeight - margin);
     setWheelAnchor({ x, y, side });
@@ -251,6 +252,8 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
           {renderRoom('n5', 5)}
           {renderRoom('n7', 7)}
           <div className="floor-label" style={{ gridArea: 'lbl1' }}>Rez-de-chaussée</div>
+          <div className="stair stair-left" aria-hidden="true" />
+          <div className="stair stair-right" aria-hidden="true" />
           {renderRoom('n4', 4)}
           {renderRoom('n1', 1)}
           {renderRoom('n2', 2)}
@@ -290,9 +293,6 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
             style={{ left: wheelAnchor.x, top: wheelAnchor.y }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="wheel-center">
-              <span className="wheel-room-name">{ROOMS[wheelRoom].name}</span>
-            </div>
             {wheelOptions.map((opt, i) => {
               const n = wheelOptions.length;
               const facing = wheelAnchor.side === 'left' ? 180 : 0;
@@ -300,7 +300,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
               const start = facing - span / 2;
               const deg = n > 1 ? start + (i / (n - 1)) * span : facing;
               const rad = (deg * Math.PI) / 180;
-              const r = 108;
+              const r = 92;
               const x = Math.cos(rad) * r;
               const y = Math.sin(rad) * r;
               return (

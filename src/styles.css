@@ -254,18 +254,35 @@ button {
           Sous-sol            */
 .board {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: 40px repeat(6, 1fr) 40px;
   grid-template-areas:
-    'lbl2 lbl2 lbl2 lbl2 lbl2 lbl2'
-    'n6 n6 n3 n3 n5 n5'
-    'n7 n7 n7 n7 n7 n7'
-    'lbl1 lbl1 lbl1 lbl1 lbl1 lbl1'
-    'n4 n4 n4 n1 n1 n1'
-    'n2 n2 n2 n1 n1 n1'
-    'lbl0 lbl0 lbl0 lbl0 lbl0 lbl0'
-    'n8 n8 n8 n8 n8 n8';
+    'lbl2 lbl2 lbl2 lbl2 lbl2 lbl2 lbl2 lbl2'
+    'n6 n6 n6 n3 n3 n5 n5 n5'
+    'sL n7 n7 n7 n7 n7 n7 sR'
+    'sL lbl1 lbl1 lbl1 lbl1 lbl1 lbl1 sR'
+    'n4 n4 n4 n4 n1 n1 n1 sR'
+    'n2 n2 n2 n2 n1 n1 n1 sR'
+    'lbl0 lbl0 lbl0 lbl0 lbl0 lbl0 lbl0 lbl0'
+    'n8 n8 n8 n8 n8 n8 n8 n8';
   gap: 8px;
 }
+
+/* Escaliers décoratifs — purement visuels, non interactifs.
+   Ils matérialisent les passages Chambre↔Cuisine et Bibliothèque↔Sous-sol. */
+.stair {
+  pointer-events: none;
+  position: relative;
+  z-index: 2;
+  border: 2px solid #16120c;
+  background-image:
+    repeating-linear-gradient(180deg, #16120c 0 3px, transparent 3px 13px),
+    linear-gradient(160deg, #efe8d6, #dcd2b8);
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.55);
+  margin: -10px 0; /* déborde sur les pièces du dessus et du dessous */
+  min-width: 0;
+}
+.stair-left { grid-area: sL; }
+.stair-right { grid-area: sR; }
 
 .floor-label {
   font-size: 10px;
@@ -606,7 +623,7 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .wheel-close {
   position: absolute;
   left: 0; top: 0;
-  transform: translate(-50%, calc(-50% + 150px));
+  transform: translate(-50%, calc(-50% + 132px));
   width: 40px; height: 40px;
   border-radius: 50%;
   background: #f4efe3;
