@@ -295,10 +295,9 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
           >
             {wheelOptions.map((opt, i) => {
               const n = wheelOptions.length;
-              const facing = wheelAnchor.side === 'left' ? 180 : 0;
-              const span = n > 1 ? Math.min(160, 46 * (n - 1)) : 0;
-              const start = facing - span / 2;
-              const deg = n > 1 ? start + (i / (n - 1)) * span : facing;
+              // Répartition équilibrée tout autour du point (ex. 4 options :
+              // haut, droite, bas, gauche). Départ en haut.
+              const deg = -90 + (i / n) * 360;
               const rad = (deg * Math.PI) / 180;
               const r = 92;
               const x = Math.cos(rad) * r;
