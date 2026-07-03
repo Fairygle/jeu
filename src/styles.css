@@ -1458,27 +1458,14 @@ input::placeholder { color: #9a938a; }
    AMBIANCE CARTE À JOUER RÉALISTE (CSS pur) — bois, papier vieilli, usure
    ========================================================================== */
 
-/* --- Fond bois sombre --- */
+/* --- Fond papier vieilli uni (plus de bois) --- */
 body {
-  background-color: #241a12;
+  background-color: #e2d9c3;
   background-image:
-    /* veines verticales des planches */
-    repeating-linear-gradient(
-      90deg,
-      rgba(0, 0, 0, 0.28) 0px,
-      rgba(0, 0, 0, 0.28) 2px,
-      transparent 2px,
-      transparent 84px
-    ),
-    /* grain horizontal du bois */
-    repeating-linear-gradient(
-      88deg,
-      rgba(120, 82, 48, 0.10) 0px,
-      rgba(70, 46, 26, 0.14) 3px,
-      rgba(40, 26, 14, 0.10) 7px,
-      rgba(90, 60, 34, 0.08) 11px
-    ),
-    radial-gradient(ellipse at 30% 0%, #3d2c1c 0%, #241a12 55%, #17100a 100%);
+    radial-gradient(circle at 25% 15%, rgba(120, 96, 54, 0.08) 0%, transparent 12%),
+    radial-gradient(circle at 80% 30%, rgba(100, 78, 42, 0.07) 0%, transparent 14%),
+    radial-gradient(circle at 60% 85%, rgba(120, 96, 54, 0.07) 0%, transparent 13%),
+    radial-gradient(ellipse at 50% 40%, #f0ebdd 0%, #e2d9c3 60%, #d3c7ac 100%);
   background-attachment: fixed;
 }
 
@@ -1647,3 +1634,14 @@ body {
   color: #16120c !important;
 }
 .bar-stats, .ap-strip, .turn-indicator { color: #16120c !important; }
+
+/* --- Ajustements après suppression du bois : textes lisibles sur papier --- */
+body { color: #16130f; }
+.floor-label { color: #7a6f58 !important; }
+.game-header-title { color: #16120c !important; }
+.brand-title, .hero h1 { color: #17130d; }
+.brand-sub, .tagline { color: #5c5445; }
+
+/* La carte d'accueil se fond légèrement moins : on garde son ombre pour le relief */
+.container.home-page { box-shadow: 0 10px 26px rgba(90, 66, 36, 0.35), 0 3px 8px rgba(90, 66, 36, 0.25); }
+.center-page .auth-card, .center-page .panel { box-shadow: 0 10px 26px rgba(90, 66, 36, 0.35); }
