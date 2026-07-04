@@ -3,6 +3,7 @@ import { ADJACENCY, ALL_ROOMS, LINE_OF_SIGHT, ROOMS, RoomId, reachable } from '.
 import { GameAction, GameState, PlayerIndex, roomEffectCost } from '../game/engine';
 import { ActionIcon, Hearts } from './icons';
 import { ROOM_DECOR } from './decor';
+import { useGameEvents } from './useGameEvents';
 
 interface Props {
   state: GameState;
@@ -49,6 +50,8 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
   }, [deadline]);
 
   const secondsLeft = deadline ? Math.max(0, Math.ceil((deadline - now) / 1000)) : null;
+
+  const gameEvent = useGameEvents(state, viewer);
 
   const me = state.players[viewer];
   const foe = state.players[viewer === 0 ? 1 : 0];
@@ -206,6 +209,17 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
 
   return (
     <div className="game-with-bar">
+      {/* Bannière d'événement animée — un seul événement à la fois */}
+      {gameEvent && (
+        <div className={`event-banner ${gameEvent.weight} tone-${gameEvent.tone}`} key={gameEvent.id}>
+          {gameEvent.icon && (
+            <span className="event-icon">
+              <ActionIcon k={gameEvent.icon} size={gameEvent.weight === 'major' ? 26 : 20} />
+            </span>
+          )}
+          <span className="event-text">{named(gameEvent.text)}</span>
+        </div>
+      )}
       {/* Ligne de statut unique */}
       <div className="top-strip">
         <span className={`turn-indicator ${myTurn ? 'my-turn' : ''}`}>{turnLabel}</span>

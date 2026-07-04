@@ -1,87 +1,30 @@
 import { ReactNode } from 'react';
 import { RoomId } from '../game/board';
 
-/** Décors en coupe, silhouettes d'encre — purement visuels. */
+/* Décors « papier découpé » en 3 couches d'encre. Style ombre chinoise, manoir ancien. */
 export const ROOM_DECOR: Partial<Record<RoomId, ReactNode>> = {
-  // Foyer — cheminée avec flamme + fauteuils
   1: (
-    <svg width="76" height="50" viewBox="0 0 76 50" fill="none" stroke="#16120c" strokeWidth="2" strokeLinecap="round">
-      <path d="M4 48 V16 H34 V48 M8 48 V22 H30 V48" />
-      <path d="M15 42 C13 37 19 36 17 31 C22 33 21 38 23 42 Z" fill="#a3231d" stroke="none" opacity=".85" />
-      <path d="M46 48 V34 C46 28 52 28 52 34 M70 48 V34 C70 28 64 28 64 34 M46 40 H70 M50 28 H66" />
-    </svg>
+    <svg viewBox="0 0 280 116"> <rect className="l1" x="60" y="0" width="220" height="108"/> <rect className="l1" x="98" y="14" width="34" height="42" rx="2"/> <g className="l2"><rect x="102" y="18" width="26" height="34"/></g> <rect className="l2" x="60" y="102" width="220" height="6"/> <rect className="l3" x="0" y="108" width="280" height="8"/> <path className="l3" d="M160 108 V44 q0-4 4-4 h6 v-10 h52 v10 h6 q4 0 4 4 V108 h-12 V66 a25 22 0 0 0-48 0 V108 Z"/> <rect className="l3" x="154" y="30" width="84" height="7" rx="2"/> <path className="fire" d="M204 102 q-7-2-7-10 q0-6 5-9 q-1 6 3 7 q-2-8 5-12 q-1 7 4 10 q3-6 1-10 q7 4 7 13 q0 9-8 11 Z"/> <rect className="l3" x="188" y="98" width="34" height="3"/> <path className="l3" d="M96 108 v-6 h-5 q-3 0-3-4 v-26 q0-6 4-6 q-6-16 6-24 q9-6 17-1 q7 4 7 13 v10 h16 q7 0 8 8 l2 22 q0 4-3 4 h-4 v10 h-7 v-8 H103 v8 Z"/> <path className="l2" d="M139 108 v-22 h3 v-3 h-10 v3 h3 v22 Z M128 83 h18 v-3 h-18 Z"/> </svg>
   ),
-  // Salle à manger — table et chaises
   2: (
-    <svg width="80" height="44" viewBox="0 0 80 44" fill="none" stroke="#16120c" strokeWidth="2" strokeLinecap="round">
-      <path d="M16 20 H64 M20 20 V42 M60 20 V42" />
-      <path d="M6 42 V14 M6 26 H14 V42 M74 42 V14 M74 26 H66 V42" />
-      <ellipse cx="40" cy="16" rx="7" ry="2.6" />
-    </svg>
+    <svg viewBox="0 0 280 116"> <rect className="l1" x="70" y="0" width="210" height="108"/> <path className="l1" d="M188 0 v10 m0 0 q-22 2-22 14 h44 q0-12-22-14 Z M166 24 h44 v4 h-44 Z"/> <rect className="l2" x="70" y="102" width="210" height="6"/> <rect className="l3" x="0" y="108" width="280" height="8"/> <path className="l3" d="M116 108 v-52 q0-4 4-4 h4 q4 0 4 4 v18 h-2 v34 h-4 v-32 h-2 v32 Z"/> <path className="l3" d="M130 108 v-6 q-4-1-4-8 v-24 h108 v24 q0 7-4 8 v6 h-6 v-5 q-10 3-44 3 t-44-3 v5 Z"/> <path className="l3" d="M180 70 v-14 m-12 2 q0-8 12-9 q12 1 12 9 m-24 0 v6 h-3 v3 h9 v-3 h-3 m18-6 v6 h-3 v3 h9 v-3 h-3"/> <g className="fire"><circle cx="168" cy="52" r="2.4"/><circle cx="180" cy="50" r="2.4"/><circle cx="192" cy="52" r="2.4"/></g> <path className="l3" d="M252 108 v-52 q0-4-4-4 h-4 q-4 0-4 4 v18 h2 v34 h4 v-32 h2 v32 Z"/> </svg>
   ),
-  // Hall — portemanteau et console
   3: (
-    <svg width="62" height="50" viewBox="0 0 62 50" fill="none" stroke="#16120c" strokeWidth="2" strokeLinecap="round">
-      <path d="M12 48 V8 M4 14 L12 8 L20 14 M6 22 L12 17 L18 22" />
-      <path d="M8 13 C8 19 5 20 6 24" strokeWidth="1.6" opacity=".7" />
-      <path d="M34 48 V30 H58 V48 M38 30 V26 H54 V30 M46 34 V40" />
-    </svg>
+    <svg viewBox="0 0 280 116"> <rect className="l1" x="80" y="0" width="200" height="108"/> <path className="l1" d="M150 0 v12 q-18 2-18 12 h36 q0-10-18-12 Z"/> <g className="l1"><circle cx="138" cy="28" r="1.6"/><circle cx="150" cy="30" r="1.6"/><circle cx="162" cy="28" r="1.6"/></g> <rect className="l2" x="80" y="102" width="200" height="6"/> <rect className="l3" x="0" y="108" width="280" height="8"/> <path className="l3" d="M104 108 V30 q0-6 6-6 h16 q6 0 6 6 V108 Z"/> <circle cx="118" cy="42" r="9" fill="#efe9d8" opacity=".95"/> <path className="s3" d="M118 42 v-6 M118 42 l4 3" strokeWidth="1.6"/> <rect className="l2" x="112" y="58" width="12" height="34" rx="5"/> <path className="l3" d="M176 108 v-12 h14 v-12 h14 v-12 h14 v-12 h14 v-12 h14 v-12 h14 V108 Z"/> <path className="s3" d="M176 88 q60-8 92-62" strokeWidth="4" strokeLinecap="round"/> <circle className="l3" cx="176" cy="88" r="5"/> <path className="s3" d="M186 92 v-10 M202 90 v-12 M218 84 v-13 M234 76 v-14 M250 66 v-14" strokeWidth="2"/> </svg>
   ),
-  // Cuisine — fourneau + casseroles
   4: (
-    <svg width="80" height="50" viewBox="0 0 80 50" fill="none" stroke="#16120c" strokeWidth="2" strokeLinecap="round">
-      <rect x="4" y="18" width="34" height="30" />
-      <circle cx="13" cy="24" r="3" />
-      <circle cx="27" cy="24" r="3" />
-      <rect x="10" y="33" width="22" height="10" />
-      <path d="M48 48 V30 H74 M52 30 C52 24 58 24 58 30 M64 30 C64 22 74 24 72 30" />
-      <path d="M55 14 C55 11 57 11 57 8 M62 14 C62 11 64 11 64 8" opacity=".6" strokeWidth="1.6" />
-    </svg>
+    <svg viewBox="0 0 280 116"> <rect className="l1" x="80" y="0" width="200" height="108"/> <g className="l1"><rect x="96" y="22" width="60" height="3"/><path d="M102 22 v-10 h8 v10 Z M116 22 v-13 h9 v13 Z M132 22 v-9 h8 v9 Z"/></g> <rect className="l2" x="80" y="102" width="200" height="6"/> <rect className="l3" x="0" y="108" width="280" height="8"/> <path className="s2" d="M168 8 h84" strokeWidth="3"/> <g className="l2"> <path d="M176 8 v10 M172 18 h9 v9 q-4.5 3-9 0 Z"/> <path d="M200 8 v14 M194 22 h13 v11 q-6.5 4-13 0 Z"/> <path d="M228 8 v9 M225 17 h7 v14 q-3.5 3-7 0 Z"/> </g> <path className="l3" d="M180 108 v-10 h-4 v-38 q0-5 5-5 h62 q5 0 5 5 v38 h-4 v10 h-8 v-8 h-48 v8 Z"/> <rect className="l3" x="206" y="20" width="10" height="35"/> <path className="l3" d="M198 20 h26 v-6 h-26 Z"/> <circle cx="196" cy="70" r="6" fill="#efe9d8" opacity=".9"/> <circle cx="226" cy="70" r="6" fill="#efe9d8" opacity=".9"/> <rect x="190" y="84" width="42" height="12" fill="#efe9d8" opacity=".55" rx="2"/> <path className="fire" d="M208 92 q-3-1-3-5 q0-3 2.5-4 q-.5 3 1.5 3.5 q-1-4 2.5-6 q-.5 3.5 2 5 q1.5-3 .5-5 q3.5 2 3.5 6.5 q0 4-4 5 Z"/> <path className="s2" d="M200 30 q-4-6 0-11 q4-5 0-10 M230 34 q-4-6 0-11 q4-5 0-10" strokeWidth="1.8" strokeLinecap="round"/> </svg>
   ),
-  // Bibliothèque — étagère garnie
   5: (
-    <svg width="70" height="52" viewBox="0 0 70 52" fill="none" stroke="#16120c" strokeWidth="2">
-      <rect x="4" y="4" width="62" height="46" />
-      <line x1="4" y1="19" x2="66" y2="19" />
-      <line x1="4" y1="34" x2="66" y2="34" />
-      <g fill="#16120c" stroke="none">
-        <rect x="8" y="8" width="4" height="11" /><rect x="14" y="10" width="4" height="9" />
-        <rect x="20" y="7" width="5" height="12" /><rect x="34" y="9" width="4" height="10" />
-        <rect x="40" y="8" width="4" height="11" /><rect x="10" y="23" width="4" height="11" />
-        <rect x="16" y="25" width="5" height="9" /><rect x="30" y="24" width="4" height="10" />
-        <rect x="48" y="22" width="5" height="12" /><rect x="55" y="25" width="4" height="9" />
-        <rect x="8" y="39" width="5" height="11" /><rect x="26" y="40" width="4" height="10" />
-        <rect x="33" y="38" width="4" height="12" />
-      </g>
-    </svg>
+    <svg viewBox="0 0 280 116"> <rect className="l1" x="70" y="0" width="210" height="108"/> <rect className="l2" x="70" y="102" width="210" height="6"/> <rect className="l3" x="0" y="108" width="280" height="8"/> <path className="l3" d="M170 108 V22 q0-10 10-12 h60 q10 2 10 12 V108 h-6 V26 h-68 V108 Z"/> <g className="l2"> <rect x="176" y="30" width="68" height="24"/><rect x="176" y="58" width="68" height="24"/><rect x="176" y="86" width="68" height="18"/> </g> <g fill="#efe9d8" opacity=".85"> <rect x="180" y="34" width="5" height="17"/><rect x="188" y="37" width="4" height="14"/><rect x="195" y="33" width="6" height="18"/><rect x="205" y="36" width="4" height="15"/><rect x="212" y="34" width="5" height="17"/><rect x="222" y="37" width="4" height="14"/><rect x="230" y="34" width="6" height="17"/> <rect x="181" y="62" width="4" height="17"/><rect x="189" y="65" width="6" height="14"/><rect x="200" y="61" width="4" height="18"/><rect x="208" y="64" width="5" height="15"/><rect x="218" y="62" width="4" height="17"/><rect x="226" y="65" width="6" height="14"/><rect x="236" y="62" width="4" height="17"/> <rect x="182" y="89" width="5" height="13"/><rect x="192" y="91" width="4" height="11"/><rect x="203" y="88" width="6" height="14"/><rect x="214" y="90" width="4" height="12"/><rect x="224" y="88" width="5" height="14"/> </g> <path className="s3" d="M158 108 L184 24 M172 108 L198 24" strokeWidth="3"/> <path className="s3" d="M164 90 h15 M169 72 h15 M174 54 h15 M179 38 h15" strokeWidth="2"/> <path className="l3" d="M96 108 v-5 h-4 q-3 0-3-4 v-20 q0-5 4-5 q-4-12 5-18 q8-5 14-1 q5 3 5 10 v9 h12 q6 0 7 7 l1 17 q0 5-3 5 h-4 v5 h-6 v-4 h-22 v4 Z"/> <path className="l2" d="M140 108 v-3 h-8 v3 Z M135 105 h2 V64 h-2 Z M124 64 h24 l-5-14 h-14 Z"/> </svg>
   ),
-  // Chambre — lit
   6: (
-    <svg width="86" height="46" viewBox="0 0 86 46" fill="none" stroke="#16120c" strokeWidth="2" strokeLinecap="round">
-      <path d="M4 44 V16 M4 24 H82 M82 44 V24" />
-      <rect x="8" y="17" width="16" height="7" rx="3" fill="#16120c" stroke="none" opacity=".8" />
-      <path d="M4 32 H82" opacity=".5" />
-    </svg>
+    <svg viewBox="0 0 280 116"> <rect className="l1" x="70" y="0" width="210" height="108"/> <ellipse className="l1" cx="108" cy="36" rx="15" ry="20"/> <ellipse cx="108" cy="36" rx="11" ry="16" fill="#efe9d8" opacity=".8"/> <rect className="l2" x="70" y="102" width="210" height="6"/> <rect className="l3" x="0" y="108" width="280" height="8"/> <path className="l3" d="M162 108 V14 h5 V108 Z M268 108 V14 h5 V108 Z"/> <rect className="l3" x="160" y="10" width="115" height="5" rx="2"/> <path className="l2" d="M167 15 q10 26 0 52 l8-6 q6 18 0 30 l-8 6 V15 Z"/> <path className="l3" d="M167 108 v-22 q0-6 6-6 h94 q6 0 6 6 v22 Z"/> <path className="l2" d="M176 80 q0-8 8-8 h14 q8 0 8 8 Z"/> <path className="l2" d="M212 80 q0-8 8-8 h12 q8 0 8 8 Z"/> <path className="l3" d="M128 108 v-24 h24 v24 Z"/> <path className="l2" d="M136 84 v-5 h8 v5 Z M133 79 h14 l-3-8 h-8 Z"/> <circle className="fire" cx="140" cy="68" r="1.8"/> </svg>
   ),
-  // Balcon — balustres
   7: (
-    <svg width="90" height="40" viewBox="0 0 90 40" fill="none" stroke="#16120c" strokeWidth="2" strokeLinecap="round">
-      <line x1="2" y1="10" x2="88" y2="10" />
-      <line x1="2" y1="38" x2="88" y2="38" />
-      <path d="M10 10 C7 18 13 22 10 30 C13 34 10 36 10 38 M28 10 C25 18 31 22 28 30 C31 34 28 36 28 38 M46 10 C43 18 49 22 46 30 C49 34 46 36 46 38 M64 10 C61 18 67 22 64 30 C67 34 64 36 64 38 M80 10 C77 18 83 22 80 30 C83 34 80 36 80 38" strokeWidth="1.7" />
-    </svg>
+    <svg viewBox="0 0 280 116"> <circle className="l1" cx="228" cy="22" r="12"/> <path className="l1" d="M90 62 l16-12 16 12 v8 h10 v-16 l12-9 12 9 v22 h12 V56 l14-10 14 10 v20 h12 v-12 l10-8 10 8 v98 H90 Z" opacity=".10"/> <rect className="l3" x="0" y="108" width="280" height="8"/> <path className="s3" d="M96 70 H276" strokeWidth="4" strokeLinecap="round"/> <path className="s3" d="M100 108 V70 M136 108 V70 M172 108 V70 M208 108 V70 M244 108 V70 M272 108 V70" strokeWidth="2.6"/> <path className="s2" d="M104 78 q14 0 14 12 q0 10-10 10 q12 2 24-6 M140 78 q14 0 14 12 q0 10-10 10 q12 2 24-6 M176 78 q14 0 14 12 q0 10-10 10 q12 2 24-6 M212 78 q14 0 14 12 q0 10-10 10 q12 2 24-6" strokeWidth="2"/> <path className="l3" d="M108 108 v-14 h-3 l2-8 h18 l2 8 h-3 v14 Z"/> <path className="s3" d="M116 86 q-10-14-4-24 M116 86 q2-16 12-20 M116 86 q-14-6-18-2 M116 86 V64" strokeWidth="2.2" strokeLinecap="round"/> </svg>
   ),
-  // Sous-sol — tonneau et caisses
   8: (
-    <svg width="84" height="48" viewBox="0 0 84 48" fill="none" stroke="#16120c" strokeWidth="2">
-      <ellipse cx="18" cy="10" rx="12" ry="4" />
-      <path d="M6 10 V38 A12 5 0 0 0 30 38 V10" />
-      <line x1="6" y1="20" x2="30" y2="21.5" />
-      <line x1="6" y1="30" x2="30" y2="31" />
-      <rect x="42" y="20" width="24" height="24" />
-      <line x1="42" y1="20" x2="66" y2="44" opacity=".5" />
-      <line x1="66" y1="20" x2="42" y2="44" opacity=".5" />
-      <rect x="50" y="4" width="20" height="14" transform="rotate(-6 60 11)" />
-    </svg>
+    <svg viewBox="0 0 280 116"> <path className="l1" d="M70 108 V60 q70-70 210-46 V108 Z"/> <path className="s2" d="M96 42 h20 M128 30 h22 M162 24 h22 M198 22 h22 M236 24 h20 M112 54 h20 M148 44 h22 M184 38 h22 M222 36 h20" strokeWidth="1.6" opacity=".18"/> <rect className="l3" x="0" y="108" width="280" height="8"/> <path className="s2" d="M150 14 v10" strokeWidth="2"/> <path className="l2" d="M144 24 h12 l2 4 v12 l-2 4 h-12 l-2-4 V28 Z"/> <circle className="fire" cx="150" cy="34" r="2.6"/> <g className="l3"> <path d="M190 108 h-6 l10-8 h44 l10 8 h-6"/> <ellipse cx="216" cy="88" rx="26" ry="13"/> <ellipse cx="216" cy="62" rx="22" ry="11"/> </g> <g fill="#efe9d8" opacity=".5"> <ellipse cx="216" cy="88" rx="19" ry="9"/> <ellipse cx="216" cy="62" rx="15.5" ry="7.5"/> </g> <g className="l3"><circle cx="216" cy="88" r="3"/><circle cx="216" cy="62" r="2.5"/></g> <path className="l3" d="M256 108 v-20 h22 v20 Z"/> <path className="l2" d="M259 88 v-9 h3 v-4 h3 v4 h3 v9 Z M269 88 v-7 h3 v-4 h3 v4 h3 v7 Z"/> <path className="s2" d="M84 12 q0 18 20 22 M84 12 q18 2 24 16 M84 12 l22 20 M90 12 l12 18 M84 20 l16 10" strokeWidth="1.4" opacity=".28"/> </svg>
   ),
 };
