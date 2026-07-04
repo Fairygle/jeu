@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { UiIcon } from './icons';
 import { supabase } from '../lib/supabase';
 
 interface Props {
@@ -84,7 +85,7 @@ export default function LobbyChat({ userId, pseudo }: Props) {
             placeholder="Écrire au salon…"
             maxLength={300}
           />
-          <button className="chat-send" onClick={submit} disabled={!text.trim()} aria-label="Envoyer">➤</button>
+          <button className="chat-send" onClick={submit} disabled={!text.trim()} aria-label="Envoyer"><UiIcon k="send" size={18} /></button>
         </div>
       )}
     </div>

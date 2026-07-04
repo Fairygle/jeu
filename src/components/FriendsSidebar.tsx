@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { UiIcon } from './icons';
 import { supabase } from '../lib/supabase';
 
 interface Props {
@@ -110,7 +111,7 @@ export default function FriendsSidebar({ userId }: Props) {
   return (
     <>
       <button className="friends-fab" onClick={() => setOpen(true)} aria-label="Amis">
-        👥{incoming.length > 0 && <span className="chat-badge">{incoming.length}</span>}
+        <UiIcon k="friends" size={20} />{incoming.length > 0 && <span className="chat-badge">{incoming.length}</span>}
       </button>
 
       {open && createPortal(

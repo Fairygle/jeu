@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import LobbyChat from '../components/LobbyChat';
+import { UiIcon } from '../components/icons';
 import FriendsSidebar from '../components/FriendsSidebar';
 import { newGame } from '../game/engine';
 import { makeGameCode, supabase } from '../lib/supabase';
@@ -229,7 +230,7 @@ export default function HomeScreen({
           onClick={() => (quick.k === 'idle' ? startQuick() : cancelQuick())}
           disabled={!onlineEnabled}
         >
-          <span className="mode-btn-icon">⚡</span>
+          <span className="mode-btn-icon"><UiIcon k="bolt" size={22} /></span>
           <span>
             {quick.k === 'idle' && 'Partie rapide'}
             {quick.k === 'searching' && `Recherche ${String(searchSeconds).padStart(2, '0')}s ✕`}
@@ -238,11 +239,11 @@ export default function HomeScreen({
           </span>
         </button>
         <button className="mode-btn" onClick={() => setCreateOpen((v) => !v)}>
-          <span className="mode-btn-icon">➕</span>
+          <span className="mode-btn-icon"><UiIcon k="plus" size={22} /></span>
           <span>Créer</span>
         </button>
         <button className="mode-btn" onClick={onJoinCode} disabled={!onlineEnabled}>
-          <span className="mode-btn-icon">🔑</span>
+          <span className="mode-btn-icon"><UiIcon k="key" size={22} /></span>
           <span>Rejoindre</span>
         </button>
       </div>
@@ -250,10 +251,10 @@ export default function HomeScreen({
       {createOpen && (
         <div className="create-choice">
           <button className="create-opt" onClick={onLocal}>
-            🏠 Local <span className="muted small">— même appareil</span>
+            <UiIcon k="house" size={16} /> Local <span className="muted small">— même appareil</span>
           </button>
           <button className="create-opt" onClick={onCreateCode} disabled={!onlineEnabled}>
-            🔑 Code multijoueur
+            <UiIcon k="key" size={16} /> Code multijoueur
           </button>
         </div>
       )}
@@ -293,8 +294,8 @@ export default function HomeScreen({
       )}
 
       <div className="row home-footer">
-        <button className="btn btn-sm" onClick={onRules}>📜 Règles</button>
-        <button className="btn btn-sm" onClick={onLogout}>Déconnexion</button>
+        <button className="btn btn-sm" onClick={onRules}><UiIcon k="scroll" size={15} /> Règles</button>
+        <button className="btn btn-sm" onClick={onLogout}><UiIcon k="exit" size={15} /> Déconnexion</button>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { UiIcon } from './icons';
 
 export interface ChatMessage {
   from: string; // userId
@@ -58,7 +59,7 @@ export default function ChatBox({ messages, myId, onSend, opponentName, opponent
           placeholder="Message…"
           maxLength={300}
         />
-        <button className="chat-send" onClick={submit} disabled={!text.trim()} aria-label="Envoyer">➤</button>
+        <button className="chat-send" onClick={submit} disabled={!text.trim()} aria-label="Envoyer"><UiIcon k="send" size={18} /></button>
       </div>
     </div>
   );

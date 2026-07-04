@@ -54,3 +54,35 @@ export function Hearts({ hp, max = 2, size = 15 }: { hp: number; max?: number; s
     </span>
   );
 }
+
+/* Pictogrammes d'interface (accueil) — trait d'encre épuré, style v4. */
+const UI: Record<string, string> = {
+  bolt: '<path d="M18 3 L8 18 H15 L13 29 L24 13 H16 Z" fill="#16120c" stroke="none"/>',
+  plus: '<line x1="16" y1="6" x2="16" y2="26"/><line x1="6" y1="16" x2="26" y2="16"/>',
+  key: '<circle cx="10" cy="12" r="5"/><path d="M14 16 L26 28 M22 24 L25 21 M18 20 L21 17"/>',
+  house: '<path d="M5 15 L16 5 L27 15 M8 13 V27 H24 V13 M14 27 V19 H18 V27"/>',
+  scroll: '<path d="M8 4 H20 L26 10 V28 H8 Z M20 4 V10 H26"/><line x1="12" y1="16" x2="22" y2="16"/><line x1="12" y1="21" x2="22" y2="21"/>',
+  exit: '<path d="M14 5 H6 V27 H14"/><path d="M12 16 H27 M22 10 L27 16 L22 22"/>',
+  friends: '<circle cx="11" cy="11" r="4.5"/><path d="M3 27 C3 21 8 19 11 19 C14 19 19 21 19 27"/><circle cx="23" cy="12" r="3.5"/><path d="M20.5 18.5 C26 18 29 21.5 29 26"/>',
+  send: '<path d="M4 15 L28 5 L20 28 L14 19 Z M14 19 L28 5"/>',
+};
+
+export function UiIcon({ k, size = 20 }: { k: string; size?: number }) {
+  const inner = UI[k];
+  if (!inner) return null;
+  return (
+    <svg
+      viewBox="0 0 32 32"
+      width={size}
+      height={size}
+      fill="none"
+      stroke="#16120c"
+      strokeWidth={2.4}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ display: 'block' }}
+      aria-hidden="true"
+      dangerouslySetInnerHTML={{ __html: inner }}
+    />
+  );
+}
