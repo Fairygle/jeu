@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useI18n } from '../i18n';
 import { UiIcon } from './icons';
 import { supabase } from '../lib/supabase';
 
@@ -16,6 +17,7 @@ interface LobbyMsg {
 }
 
 export default function LobbyChat({ userId, pseudo }: Props) {
+  const { t } = useI18n();
   const [messages, setMessages] = useState<LobbyMsg[]>([]);
   const [text, setText] = useState('');
   const [ready, setReady] = useState(true);
@@ -62,12 +64,12 @@ export default function LobbyChat({ userId, pseudo }: Props) {
 
   return (
     <div className="lobby-chat">
-      <div className="lobby-chat-header">Salon</div>
+      <div className="lobby-chat-header">{t('home.salon')}</div>
       <div className="lobby-chat-list" ref={listRef}>
         {!ready && (
-          <div className="chat-empty">Salon indisponible pour l'instant (migration serveur à faire).</div>
+          <div className="chat-empty">{t('home.salon.unavailable')}</div>
         )}
-        {ready && messages.length === 0 && <div className="chat-empty">Personne n'a encore parlé…</div>}
+        {ready && messages.length === 0 && <div className="chat-empty">{t('home.salon.empty')}</div>}
         {ready &&
           messages.map((m) => (
             <div key={m.id} className={`chat-line ${m.user_id === userId ? 'mine' : 'theirs'}`}>
@@ -82,7 +84,7 @@ export default function LobbyChat({ userId, pseudo }: Props) {
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && submit()}
-            placeholder="Écrire au salon…"
+            placeholder={t('home.salon.write')}
             maxLength={300}
           />
           <button className="chat-send" onClick={submit} disabled={!text.trim()} aria-label="Envoyer"><UiIcon k="send" size={18} /></button>

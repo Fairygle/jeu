@@ -1898,3 +1898,19 @@ button { user-select: none; }
   0%, 100% { box-shadow: 3px 4px 0 rgba(0,0,0,.82); }
   50% { box-shadow: 3px 4px 0 rgba(0,0,0,.82), 0 0 0 3px rgba(184,145,63,.55); }
 }
+
+/* Sélecteur de langue FR/EN */
+.lang-toggle {
+  font-family: 'Special Elite', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  margin-right: 8px;
+  background: #16120c;
+  color: #f2efe6;
+  border: 2px solid #16120c;
+  border-radius: 0;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.6);
+  vertical-align: middle;
+}
+.lang-toggle:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 rgba(0,0,0,.6); }

@@ -4,6 +4,7 @@ import { GameAction, GameState, PlayerIndex, hasValidAction, roomEffectCost } fr
 import { ActionIcon, Hearts } from './icons';
 import { ROOM_DECOR } from './decor';
 import { useGameEvents } from './useGameEvents';
+import { useI18n } from '../i18n';
 
 interface Props {
   state: GameState;
@@ -37,6 +38,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
     text
       .replace(/[Ll]e joueur ([12])/g, (_, d) => playerNames[Number(d) - 1])
       .replace(/[Jj]oueur ([12])/g, (_, d) => playerNames[Number(d) - 1]);
+  const { t } = useI18n();
   const [wheelRoom, setWheelRoom] = useState<RoomId | null>(null);
   const [wheelAnchor, setWheelAnchor] = useState<{ x: number; y: number; side: 'left' | 'right' } | null>(null);
   const [showLog, setShowLog] = useState(false);
@@ -98,9 +100,9 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
   const legendText: string | null = useMemo(() => {
     const names = neighborRooms.map((r) => ROOMS[r].name).join(', ');
     if (myTurn && me.room !== null && neighborRooms.length > 0)
-      return `${me.freeMoveAvailable ? 'Repli' : 'Depuis'} ${me.freeMoveAvailable ? 'vers' : ROOMS[me.room].name} → ${names}`;
-    if (pendingForMe && state.pending?.kind === 'listen' && neighborRooms.length > 0) return `Pièces voisines : ${names}`;
-    if (pendingForMe && state.pending?.kind === 'escape' && neighborRooms.length > 0) return `Fuyez vers : ${names}`;
+      return me.freeMoveAvailable ? `${t('game.foldTo')} → ${names}` : `${t('game.from')} ${ROOMS[me.room].name} → ${names}`;
+    if (pendingForMe && state.pending?.kind === 'listen' && neighborRooms.length > 0) return `${t('game.neighbors')} ${names}`;
+    if (pendingForMe && state.pending?.kind === 'escape' && neighborRooms.length > 0) return `${t('game.escapeTo')} ${names}`;
     return null;
   }, [neighborRooms, myTurn, me.room, me.freeMoveAvailable, pendingForMe, state.pending]);
 
@@ -114,18 +116,18 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
     if (dist1 && (me.freeMoveAvailable || me.ap >= 1)) {
       opts.push(
         me.freeMoveAvailable
-          ? { icon: 'runner', label: 'Repli', cost: 'gratuit', action: { type: 'move', room } }
-          : { icon: 'footprint', label: 'Aller', cost: '1 PA', action: { type: 'move', room } },
+          ? { icon: 'runner', label: t('act.fold'), cost: t('act.free'), action: { type: 'move', room } }
+          : { icon: 'footprint', label: t('act.move'), cost: '1 PA', action: { type: 'move', room } },
       );
     }
     if (!dist1 && room !== me.room && dist2 && !me.freeMoveAvailable && me.ap >= 2) {
-      opts.push({ icon: 'footsteps', label: 'Sprint', cost: '2 PA', action: { type: 'double_move', room } });
+      opts.push({ icon: 'footsteps', label: t('act.sprint'), cost: '2 PA', action: { type: 'double_move', room } });
     }
     if ((room === me.room || LINE_OF_SIGHT[me.room].includes(room)) && me.ap >= 2) {
-      opts.push({ icon: 'revolver', label: 'Tirer', cost: '2 PA', action: { type: 'shoot', room } });
+      opts.push({ icon: 'revolver', label: t('act.shoot'), cost: '2 PA', action: { type: 'shoot', room } });
     }
     if (me.traps.includes(room) && me.ap >= 1) {
-      opts.push({ icon: 'detonator', label: 'Déclencher', cost: '1 PA', action: { type: 'activate_trap', room } });
+      opts.push({ icon: 'detonator', label: t('act.trigger'), cost: '1 PA', action: { type: 'activate_trap', room } });
     }
     if (
       me.room === 8 &&
@@ -134,14 +136,14 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       !me.traps.includes(room) &&
       !me.delayedTraps.includes(room)
     ) {
-      opts.push({ icon: 'timedynamite', label: 'Retardé', cost: '1 PA', action: { type: 'activate_room', room } });
+      opts.push({ icon: 'timedynamite', label: t('act.delayed'), cost: '1 PA', action: { type: 'activate_room', room } });
     }
     if (room === me.room) {
       if (me.ap >= 1) {
-        opts.push({ icon: 'ear', label: 'Écouter', cost: '1 PA', action: { type: 'listen' } });
+        opts.push({ icon: 'ear', label: t('act.listen'), cost: '1 PA', action: { type: 'listen' } });
       }
       if (me.ap >= 1 && me.traps.length + me.delayedTraps.length < 2 && !me.traps.includes(room)) {
-        opts.push({ icon: 'dynamite', label: 'Piège', cost: '1 PA', action: { type: 'trap' } });
+        opts.push({ icon: 'dynamite', label: t('act.trap'), cost: '1 PA', action: { type: 'trap' } });
       }
       const cost = roomEffectCost(state, viewer);
       const info = EFFECT_INFO[room];
@@ -212,19 +214,19 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
 
   const turnLabel = isSetup
     ? canAct
-      ? 'Choisissez votre cachette'
-      : "L'adversaire se cache…"
+      ? t('game.chooseHideTitle')
+      : t('game.oppHiding')
     : pendingForMe
       ? state.pending?.kind === 'escape'
-        ? 'Fuyez le sous-sol'
-        : 'Répondez'
+        ? t('game.escapeBasement')
+        : t('game.respond')
       : state.pending
-        ? 'Attente…'
+        ? t('game.waiting')
         : state.phase === 'finished'
-          ? 'Terminé'
+          ? t('game.finished')
           : myTurn
-            ? 'Votre tour'
-            : "Tour adverse";
+            ? t('game.yourTurn')
+            : t('game.oppTurn');
 
   return (
     <div className="game-with-bar">
@@ -232,7 +234,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       {foldPrompt && (
         <div className="event-banner major tone-reveal" key="fold-prompt">
           <span className="event-icon"><ActionIcon k="runner" size={26} /></span>
-          <span className="event-text">Repliez-vous — touchez une pièce voisine</span>
+          <span className="event-text">{t('game.foldPrompt')}</span>
         </div>
       )}
       {/* Bannière d'événement animée — un seul événement à la fois */}
@@ -261,12 +263,12 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
 
       {(isSetup || pendingForMe || (state.pending && !pendingForMe)) && (
         <div className="prompt-mini">
-          {isSetup && canAct && 'Touchez une pièce pour vous y cacher, en secret.'}
-          {isSetup && !canAct && "L'adversaire choisit sa position…"}
+          {isSetup && canAct && t('game.chooseHide')}
+          {isSetup && !canAct && t('game.oppChoosing')}
           {pendingForMe && state.pending?.kind === 'listen' &&
             `${state.pending.source === 'echo' ? 'Échos' : 'Écoute'} — touchez une pièce adjacente à votre position réelle.`}
-          {pendingForMe && state.pending?.kind === 'escape' && 'Touchez une pièce de refuge adjacente.'}
-          {state.pending && !pendingForMe && "En attente de l'adversaire…"}
+          {pendingForMe && state.pending?.kind === 'escape' && t('game.escapeAsk')}
+          {state.pending && !pendingForMe && t('game.waitingOpp')}
         </div>
       )}
       {error && <div className="error-box error-mini">{error}</div>}
@@ -291,19 +293,19 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       {/* Plateau — occupe l'essentiel de l'écran */}
       <div className="board-wrap">
         <div className="board">
-          <div className="floor-label first" style={{ gridArea: 'lbl2' }}>Étage</div>
+          <div className="floor-label first" style={{ gridArea: 'lbl2' }}>{t('game.floor.top')}</div>
           {renderRoom('n6', 6)}
           {renderRoom('n3', 3)}
           {renderRoom('n5', 5)}
           {renderRoom('n7', 7)}
-          <div className="floor-label" style={{ gridArea: 'lbl1' }}>Rez-de-chaussée</div>
+          <div className="floor-label" style={{ gridArea: 'lbl1' }}>{t('game.floor.ground')}</div>
           <div className="stair stair-left" aria-hidden="true" />
           <div className="stair stair-mid" aria-hidden="true" />
           <div className="stair stair-right" aria-hidden="true" />
           {renderRoom('n4', 4)}
           {renderRoom('n1', 1)}
           {renderRoom('n2', 2)}
-          <div className="floor-label" style={{ gridArea: 'lbl0' }}>Sous-sol</div>
+          <div className="floor-label" style={{ gridArea: 'lbl0' }}>{t('game.floor.basement')}</div>
           {renderRoom('n8', 8)}
         </div>
       </div>
@@ -316,7 +318,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
             disabled={!myTurn}
             onClick={() => onAction({ type: 'end_turn' })}
           >
-            Fin de tour
+            {t('game.endTurn')}
           </button>
           <button
             className="btn btn-danger btn-icon"
@@ -389,7 +391,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
               <p><ActionIcon k="hatch" size={14} /> <strong>Bibliothèque</strong> (1⚡) — un adversaire en Cuisine chute au Sous-sol.</p>
               <p><ActionIcon k="wave" size={14} /> <strong>Chambre</strong> (1⚡) — inonde le Sous-sol : −1♥ à qui s'y trouve, accès bloqué un tour.</p>
               <p><ActionIcon k="jump" size={14} /> <strong>Balcon</strong> (gratuit) — saut vers la Cuisine, vous êtes révélé.</p>
-              <p><ActionIcon k="timedynamite" size={14} /> <strong>Sous-sol</strong> (1⚡) — piège retardé n'importe où, se déclenche à votre prochain tour.</p>
+              <p><ActionIcon k="timedynamite" size={14} /> <strong>{t('game.floor.basement')}</strong> (1⚡) — piège retardé n'importe où, se déclenche à votre prochain tour.</p>
               <p className="muted small">Activer un effet vous révèle jusqu'à votre prochain déplacement. 60 s par tour, 2 tours inactifs = forfait. Icônes : game-icons.net (CC BY).</p>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import LobbyChat from '../components/LobbyChat';
 import { UiIcon } from '../components/icons';
+import { useI18n } from '../i18n';
 import FriendsSidebar from '../components/FriendsSidebar';
 import { newGame } from '../game/engine';
 import { makeGameCode, supabase } from '../lib/supabase';
@@ -37,6 +38,7 @@ export default function HomeScreen({
   onLogout,
   onlineEnabled,
 }: Props) {
+  const { t, lang, setLang } = useI18n();
   const [createOpen, setCreateOpen] = useState(false);
   const [quick, setQuick] = useState<QuickPhase>({ k: 'idle' });
   const [tick, setTick] = useState(0); // pour les compteurs de secondes
@@ -217,8 +219,15 @@ export default function HomeScreen({
         <div style={{ flex: 1, minWidth: 0 }}>
           <h1 className="brand-title">Revolver Noir</h1>
           <p className="brand-sub">
+            <button
+              className="lang-toggle"
+              onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}
+              title={lang === 'fr' ? 'Switch to English' : 'Passer en français'}
+            >
+              {lang === 'fr' ? 'FR' : 'EN'}
+            </button>
             {pseudo ?? ''}
-            {onlineCount !== null && <span className="online-count"> · 🟢 {onlineCount} en ligne</span>}
+            {onlineCount !== null && <span className="online-count"> · 🟢 {onlineCount} {t('home.online')}</span>}
           </p>
         </div>
         {userId && <FriendsSidebar userId={userId} />}
@@ -232,29 +241,29 @@ export default function HomeScreen({
         >
           <span className="mode-btn-icon"><UiIcon k="bolt" size={22} /></span>
           <span>
-            {quick.k === 'idle' && 'Partie rapide'}
-            {quick.k === 'searching' && `Recherche ${String(searchSeconds).padStart(2, '0')}s ✕`}
-            {quick.k === 'awaiting' && `Confirmation… ${String(searchSeconds).padStart(2, '0')}s ✕`}
-            {(quick.k === 'found' || quick.k === 'proposed') && 'Partie trouvée !'}
+            {quick.k === 'idle' && t('home.quick')}
+            {quick.k === 'searching' && `${t('home.searching')} ${String(searchSeconds).padStart(2, '0')}s ✕`}
+            {quick.k === 'awaiting' && `${t('home.confirming')} ${String(searchSeconds).padStart(2, '0')}s ✕`}
+            {(quick.k === 'found' || quick.k === 'proposed') && t('home.found')}
           </span>
         </button>
         <button className="mode-btn" onClick={() => setCreateOpen((v) => !v)}>
           <span className="mode-btn-icon"><UiIcon k="plus" size={22} /></span>
-          <span>Créer</span>
+          <span>{t('home.create')}</span>
         </button>
         <button className="mode-btn" onClick={onJoinCode} disabled={!onlineEnabled}>
           <span className="mode-btn-icon"><UiIcon k="key" size={22} /></span>
-          <span>Rejoindre</span>
+          <span>{t('home.join')}</span>
         </button>
       </div>
 
       {createOpen && (
         <div className="create-choice">
           <button className="create-opt" onClick={onLocal}>
-            <UiIcon k="house" size={16} /> Local <span className="muted small">— même appareil</span>
+            <UiIcon k="house" size={16} /> {t('home.local')} <span className="muted small">{t('home.local.hint')}</span>
           </button>
           <button className="create-opt" onClick={onCreateCode} disabled={!onlineEnabled}>
-            <UiIcon k="key" size={16} /> Code multijoueur
+            <UiIcon k="key" size={16} /> {t('home.codeMulti')}
           </button>
         </div>
       )}
@@ -263,11 +272,11 @@ export default function HomeScreen({
       {quick.k === 'found' && (
         <div className="match-confirm">
           <p>
-            Adversaire : <strong>{quick.game.host_pseudo}</strong>
+            {t('home.opponent')} : <strong>{quick.game.host_pseudo}</strong>
           </p>
           <div className="row" style={{ gap: 8 }}>
-            <button className="btn btn-gold" style={{ flex: 1 }} onClick={confirmAsSeeker}>Accepter</button>
-            <button className="btn" style={{ flex: 1 }} onClick={() => setQuick({ k: 'idle' })}>Refuser</button>
+            <button className="btn btn-gold" style={{ flex: 1 }} onClick={confirmAsSeeker}>{t('home.accept')}</button>
+            <button className="btn" style={{ flex: 1 }} onClick={() => setQuick({ k: 'idle' })}>{t('home.refuse')}</button>
           </div>
         </div>
       )}
@@ -276,11 +285,11 @@ export default function HomeScreen({
       {quick.k === 'proposed' && (
         <div className="match-confirm">
           <p>
-            Adversaire : <strong>{quick.proposal.pseudo}</strong>
+            {t('home.opponent')} : <strong>{quick.proposal.pseudo}</strong>
           </p>
           <div className="row" style={{ gap: 8 }}>
-            <button className="btn btn-gold" style={{ flex: 1 }} onClick={acceptAsHost}>Accepter</button>
-            <button className="btn" style={{ flex: 1 }} onClick={refuseAsHost}>Refuser</button>
+            <button className="btn btn-gold" style={{ flex: 1 }} onClick={acceptAsHost}>{t('home.accept')}</button>
+            <button className="btn" style={{ flex: 1 }} onClick={refuseAsHost}>{t('home.refuse')}</button>
           </div>
         </div>
       )}
@@ -294,8 +303,8 @@ export default function HomeScreen({
       )}
 
       <div className="row home-footer">
-        <button className="btn btn-sm" onClick={onRules}><UiIcon k="scroll" size={15} /> Règles</button>
-        <button className="btn btn-sm" onClick={onLogout}><UiIcon k="exit" size={15} /> Déconnexion</button>
+        <button className="btn btn-sm" onClick={onRules}><UiIcon k="scroll" size={15} />&nbsp;{t('home.rules')}</button>
+        <button className="btn btn-sm" onClick={onLogout}><UiIcon k="exit" size={15} /> {t('home.logout')}</button>
       </div>
     </div>
   );
