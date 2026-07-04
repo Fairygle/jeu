@@ -1718,3 +1718,14 @@ body { color: #16130f; }
 /* La carte d'accueil se fond légèrement moins : on garde son ombre pour le relief */
 .container.home-page { box-shadow: 0 10px 26px rgba(90, 66, 36, 0.35), 0 3px 8px rgba(90, 66, 36, 0.25); }
 .center-page .auth-card, .center-page .panel { box-shadow: 0 10px 26px rgba(90, 66, 36, 0.35); }
+
+/* Tiroir des amis : au-dessus de tout, habillé papier */
+.friends-overlay { z-index: 200; }
+.friends-panel {
+  background: linear-gradient(160deg, #ffffff 0%, #f0ebdd 60%, #e6ddc9 100%);
+  border-left: 2px solid #16120c;
+  color: #16120c;
+}
+.friends-header { color: #16120c; border-bottom: 2px solid #16120c; }
+.friends-section { color: #6d675c; border-bottom-color: #b9af97; }
+.friend-name { color: #16120c; }

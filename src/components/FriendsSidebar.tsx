@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../lib/supabase';
 
 interface Props {
@@ -112,7 +113,7 @@ export default function FriendsSidebar({ userId }: Props) {
         👥{incoming.length > 0 && <span className="chat-badge">{incoming.length}</span>}
       </button>
 
-      {open && (
+      {open && createPortal(
         <div className="friends-overlay" onClick={() => setOpen(false)}>
           <aside className="friends-panel" onClick={(e) => e.stopPropagation()}>
             <div className="friends-header">
@@ -181,7 +182,8 @@ export default function FriendsSidebar({ userId }: Props) {
               </div>
             )}
           </aside>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
