@@ -83,11 +83,12 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
 
   const legendText: string | null = useMemo(() => {
     const names = neighborRooms.map((r) => ROOMS[r].name).join(', ');
-    if (myTurn && me.room !== null && neighborRooms.length > 0) return `Depuis ${ROOMS[me.room].name} → ${names}`;
+    if (myTurn && me.room !== null && neighborRooms.length > 0)
+      return `${me.freeMoveAvailable ? 'Repli' : 'Depuis'} ${me.freeMoveAvailable ? 'vers' : ROOMS[me.room].name} → ${names}`;
     if (pendingForMe && state.pending?.kind === 'listen' && neighborRooms.length > 0) return `Pièces voisines : ${names}`;
     if (pendingForMe && state.pending?.kind === 'escape' && neighborRooms.length > 0) return `Fuyez vers : ${names}`;
     return null;
-  }, [neighborRooms, myTurn, me.room, pendingForMe, state.pending]);
+  }, [neighborRooms, myTurn, me.room, me.freeMoveAvailable, pendingForMe, state.pending]);
 
   function optionsFor(room: RoomId): WheelOption[] {
     if (!myTurn || me.room === null) return [];
@@ -416,7 +417,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       >
         <span className="room-name">{ROOMS[id].name}</span>
         <span className="room-tags">
-          {isNeighbor && <span className="pas-mark"><ActionIcon k="footprint" size={15} /></span>}
+          {isNeighbor && <span className="pas-mark"><ActionIcon k={me.freeMoveAvailable && !isSetup && !pendingForMe ? 'runner' : 'footprint'} size={15} /></span>}
           {ROOM_DECOR[id] && <span className="room-decor" aria-hidden="true">{ROOM_DECOR[id]}</span>}
           {showMe && <span className="token me" title={playerNames[viewer]}>{(playerNames[viewer] || 'V')[0].toUpperCase()}</span>}
           {showFoe && <span className="token foe" title={playerNames[viewer === 0 ? 1 : 0]}>{(playerNames[viewer === 0 ? 1 : 0] || 'A')[0].toUpperCase()}</span>}
