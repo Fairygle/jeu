@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ADJACENCY, ALL_ROOMS, LINE_OF_SIGHT, ROOMS, RoomId, reachable } from '../game/board';
 import { GameAction, GameState, PlayerIndex, roomEffectCost } from '../game/engine';
+import { ActionIcon, Hearts } from './icons';
+import { ROOM_DECOR } from './decor';
 
 interface Props {
   state: GameState;
@@ -21,11 +23,11 @@ interface WheelOption {
 }
 
 const EFFECT_INFO: Partial<Record<RoomId, { icon: string; label: string }>> = {
-  1: { icon: '🔔', label: 'Échos' },
-  4: { icon: '🍲', label: 'Ravitailler' },
-  5: { icon: '🕳️', label: 'Trappe' },
-  6: { icon: '🌊', label: 'Inonder' },
-  7: { icon: '🪂', label: 'Sauter' },
+  1: { icon: 'antenna', label: 'Échos' },
+  4: { icon: 'pot', label: 'Ravitailler' },
+  5: { icon: 'hatch', label: 'Trappe' },
+  6: { icon: 'wave', label: 'Inonder' },
+  7: { icon: 'jump', label: 'Sauter' },
 };
 
 export default function GameView({ state, viewer, canAct, onAction, playerNames, error, deadline }: Props) {
@@ -94,18 +96,18 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
     if (dist1 && (me.freeMoveAvailable || me.ap >= 1)) {
       opts.push(
         me.freeMoveAvailable
-          ? { icon: '🪶', label: 'Repli', cost: 'gratuit', action: { type: 'move', room } }
-          : { icon: '👣', label: 'Aller', cost: '1 PA', action: { type: 'move', room } },
+          ? { icon: 'runner', label: 'Repli', cost: 'gratuit', action: { type: 'move', room } }
+          : { icon: 'footprint', label: 'Aller', cost: '1 PA', action: { type: 'move', room } },
       );
     }
     if (!dist1 && room !== me.room && dist2 && !me.freeMoveAvailable && me.ap >= 2) {
-      opts.push({ icon: '🏃', label: 'Sprint', cost: '2 PA', action: { type: 'double_move', room } });
+      opts.push({ icon: 'footsteps', label: 'Sprint', cost: '2 PA', action: { type: 'double_move', room } });
     }
     if ((room === me.room || LINE_OF_SIGHT[me.room].includes(room)) && me.ap >= 2) {
-      opts.push({ icon: '🔫', label: 'Tirer', cost: '2 PA', action: { type: 'shoot', room } });
+      opts.push({ icon: 'revolver', label: 'Tirer', cost: '2 PA', action: { type: 'shoot', room } });
     }
     if (me.traps.includes(room) && me.ap >= 1) {
-      opts.push({ icon: '💥', label: 'Déclencher', cost: '1 PA', action: { type: 'activate_trap', room } });
+      opts.push({ icon: 'detonator', label: 'Déclencher', cost: '1 PA', action: { type: 'activate_trap', room } });
     }
     if (
       me.room === 8 &&
@@ -114,14 +116,14 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       !me.traps.includes(room) &&
       !me.delayedTraps.includes(room)
     ) {
-      opts.push({ icon: '⏳', label: 'Retardé', cost: '1 PA', action: { type: 'activate_room', room } });
+      opts.push({ icon: 'timedynamite', label: 'Retardé', cost: '1 PA', action: { type: 'activate_room', room } });
     }
     if (room === me.room) {
       if (me.ap >= 1) {
-        opts.push({ icon: '👂', label: 'Écouter', cost: '1 PA', action: { type: 'listen' } });
+        opts.push({ icon: 'ear', label: 'Écouter', cost: '1 PA', action: { type: 'listen' } });
       }
       if (me.ap >= 1 && me.traps.length + me.delayedTraps.length < 2 && !me.traps.includes(room)) {
-        opts.push({ icon: '🪤', label: 'Piège', cost: '1 PA', action: { type: 'trap' } });
+        opts.push({ icon: 'dynamite', label: 'Piège', cost: '1 PA', action: { type: 'trap' } });
       }
       const cost = roomEffectCost(state, viewer);
       const info = EFFECT_INFO[room];
@@ -208,7 +210,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       <div className="top-strip">
         <span className={`turn-indicator ${myTurn ? 'my-turn' : ''}`}>{turnLabel}</span>
         {state.phase === 'playing' && !state.pending && (
-          <span className="ap-strip">⚡{state.players[state.active].ap}</span>
+          <span className="ap-strip"><ActionIcon k="bolt" size={13} />{state.players[state.active].ap}</span>
         )}
         {secondsLeft !== null && state.phase !== 'finished' && (
           <span className={`turn-timer ${secondsLeft <= 10 ? 'urgent' : ''}`}>⏱ {secondsLeft}s</span>
@@ -245,13 +247,13 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       <div className="players-strip">
         <span className="player-side mine">
           <span className="avatar me" title={playerNames[viewer]}>{(playerNames[viewer] || 'V')[0].toUpperCase()}</span>
-          <span className="hp-heart">{'♥'.repeat(Math.max(0, me.hp))}{'♡'.repeat(Math.max(0, 2 - me.hp))}</span>
-          <span className="ap-pip">⚡{me.ap}</span>
+          <Hearts hp={Math.max(0, me.hp)} />
+          <span className="ap-pip"><ActionIcon k="bolt" size={14} />{me.ap}</span>
           {me.freeMoveAvailable && <span className="status" style={{ color: 'var(--gold)' }}>repli</span>}
         </span>
         <span className="player-side theirs">
           {foe.revealedUntilMove && <span className="status revealed">révélé</span>}
-          <span className="hp-heart">{'♥'.repeat(Math.max(0, foe.hp))}{'♡'.repeat(Math.max(0, 2 - foe.hp))}</span>
+          <Hearts hp={Math.max(0, foe.hp)} />
           <span className="avatar foe" title={playerNames[foeIndex]}>{(playerNames[foeIndex] || 'A')[0].toUpperCase()}</span>
         </span>
       </div>
@@ -288,7 +290,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
             onClick={() => confirm('Abandonner la partie ?') && onAction({ type: 'resign' })}
             aria-label="Abandonner"
           >
-            🏳
+            <ActionIcon k="flag" size={18} />
           </button>
         </div>
       </div>
@@ -317,7 +319,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
                   style={{ transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))` }}
                   onClick={() => pick(opt)}
                 >
-                  <span className="wheel-icon">{opt.icon}</span>
+                  <span className="wheel-icon"><ActionIcon k={opt.icon} size={24} /></span>
                   <span className="wheel-label">{opt.label}</span>
                   <span className="wheel-cost">{opt.cost}</span>
                 </button>
@@ -341,20 +343,20 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
               <p><strong>But :</strong> réduire l'adversaire à 0 ♥ (chacun en a 2).</p>
               <p><strong>Tour :</strong> 2 ⚡ (3 si vous commencez dans la Cuisine). Touchez une pièce pour agir.</p>
               <div className="rules-quick-section">Actions</div>
-              <p>👣 <strong>Aller</strong> (1⚡) — pièce voisine, vous redevenez caché.</p>
-              <p>🏃 <strong>Sprint</strong> (2⚡) — jusqu'à 2 pièces.</p>
-              <p>🔫 <strong>Tirer</strong> (2⚡) — votre pièce ou en ligne de vue. Vous êtes révélé, puis 🪶 repli gratuit.</p>
-              <p>👂 <strong>Écouter</strong> (1⚡) — l'adversaire désigne une pièce voisine de la sienne.</p>
-              <p>🪤 <strong>Piège</strong> (1⚡, max 2) — posé dans votre pièce, invisible pour l'autre.</p>
-              <p>💥 <strong>Déclencher</strong> (1⚡) — active votre piège : −1♥ si l'adversaire y est.</p>
+              <p><ActionIcon k="footprint" size={14} /> <strong>Aller</strong> (1⚡) — pièce voisine, vous redevenez caché.</p>
+              <p><ActionIcon k="footsteps" size={14} /> <strong>Sprint</strong> (2⚡) — jusqu'à 2 pièces.</p>
+              <p><ActionIcon k="revolver" size={14} /> <strong>Tirer</strong> (2⚡) — votre pièce ou en ligne de vue. Vous êtes révélé, puis repli gratuit.</p>
+              <p><ActionIcon k="ear" size={14} /> <strong>Écouter</strong> (1⚡) — l'adversaire désigne une pièce voisine de la sienne.</p>
+              <p><ActionIcon k="dynamite" size={14} /> <strong>Piège</strong> (1⚡, max 2) — posé dans votre pièce, invisible pour l'autre.</p>
+              <p><ActionIcon k="detonator" size={14} /> <strong>Déclencher</strong> (1⚡) — active votre piège : −1♥ si l'adversaire y est.</p>
               <div className="rules-quick-section">Effets des pièces</div>
-              <p>🔔 <strong>Foyer</strong> (gratuit) — révèle l'adversaire s'il est à l'étage, sinon il indique une pièce voisine.</p>
-              <p>🍲 <strong>Cuisine</strong> (gratuit) — si vous y commencez votre tour, activez le ravitaillement : +1⚡ (vous êtes révélé).</p>
-              <p>🕳️ <strong>Bibliothèque</strong> (1⚡) — un adversaire en Cuisine chute au Sous-sol.</p>
-              <p>🌊 <strong>Chambre</strong> (1⚡) — inonde le Sous-sol : −1♥ à qui s'y trouve, accès bloqué un tour.</p>
-              <p>🪂 <strong>Balcon</strong> (gratuit) — saut vers la Cuisine, vous êtes révélé.</p>
-              <p>⏳ <strong>Sous-sol</strong> (1⚡) — piège retardé n'importe où, se déclenche à votre prochain tour.</p>
-              <p className="muted small">Activer un effet vous révèle jusqu'à votre prochain déplacement. ⏱ 60 s par tour, 2 tours inactifs = forfait.</p>
+              <p><ActionIcon k="antenna" size={14} /> <strong>Foyer</strong> (gratuit) — révèle l'adversaire s'il est à l'étage, sinon il indique une pièce voisine.</p>
+              <p><ActionIcon k="pot" size={14} /> <strong>Cuisine</strong> (gratuit) — si vous y commencez votre tour, activez le ravitaillement : +1⚡ (vous êtes révélé).</p>
+              <p><ActionIcon k="hatch" size={14} /> <strong>Bibliothèque</strong> (1⚡) — un adversaire en Cuisine chute au Sous-sol.</p>
+              <p><ActionIcon k="wave" size={14} /> <strong>Chambre</strong> (1⚡) — inonde le Sous-sol : −1♥ à qui s'y trouve, accès bloqué un tour.</p>
+              <p><ActionIcon k="jump" size={14} /> <strong>Balcon</strong> (gratuit) — saut vers la Cuisine, vous êtes révélé.</p>
+              <p><ActionIcon k="timedynamite" size={14} /> <strong>Sous-sol</strong> (1⚡) — piège retardé n'importe où, se déclenche à votre prochain tour.</p>
+              <p className="muted small">Activer un effet vous révèle jusqu'à votre prochain déplacement. 60 s par tour, 2 tours inactifs = forfait. Icônes : game-icons.net (CC BY).</p>
             </div>
           </div>
         </div>
@@ -400,6 +402,8 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       >
         <span className="room-name">{ROOMS[id].name}</span>
         <span className="room-tags">
+          {isNeighbor && <span className="pas-mark"><ActionIcon k="footprint" size={15} /></span>}
+          {ROOM_DECOR[id] && <span className="room-decor" aria-hidden="true">{ROOM_DECOR[id]}</span>}
           {showMe && <span className="token me" title={playerNames[viewer]}>{(playerNames[viewer] || 'V')[0].toUpperCase()}</span>}
           {showFoe && <span className="token foe" title={playerNames[viewer === 0 ? 1 : 0]}>{(playerNames[viewer === 0 ? 1 : 0] || 'A')[0].toUpperCase()}</span>}
           {hoverOpts.length > 0 && (
@@ -415,7 +419,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
                     pick(opt);
                   }}
                 >
-                  {opt.icon} {opt.label}
+                  <ActionIcon k={opt.icon} size={13} /> {opt.label}
                 </span>
               ))}
             </span>

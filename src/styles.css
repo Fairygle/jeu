@@ -1433,13 +1433,12 @@ input::placeholder { color: #9a938a; }
 .room.neighbor {
   border-width: 3px;
 }
-.room.neighbor::after {
-  content: '👣';
+.pas-mark {
   position: absolute;
   top: 4px;
   right: 5px;
-  font-size: 12px;
   opacity: 0.85;
+  pointer-events: none;
 }
 
 /* Légende des passages, toujours lisible */
@@ -1787,4 +1786,24 @@ button { user-select: none; }
   }
   .room-action-chip:hover { background: #16120c; color: #f2efe6; }
   .room-action-chip:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.7); }
+}
+
+/* Décors de pièces et alignement des icônes */
+.room-decor {
+  position: absolute;
+  right: 6px;
+  bottom: 3px;
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+}
+.room-name, .token, .pas-mark { position: relative; z-index: 1; }
+.ap-pip, .ap-strip { display: inline-flex; align-items: center; gap: 3px; }
+.wheel-icon { display: flex; justify-content: center; }
+.room-action-chip svg { flex-shrink: 0; }
+.rules-quick p { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.rules-quick p svg { flex-shrink: 0; transform: translateY(2px); }
+@media (max-width: 430px) {
+  .room-decor svg { width: 56px; height: auto; max-height: 34px; }
+  .room.basement .room-decor svg, .room[data-room='7'] .room-decor svg { max-height: 26px; }
 }
