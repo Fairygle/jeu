@@ -213,11 +213,6 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
         {secondsLeft !== null && state.phase !== 'finished' && (
           <span className={`turn-timer ${secondsLeft <= 10 ? 'urgent' : ''}`}>⏱ {secondsLeft}s</span>
         )}
-        <span className="opp-stats">
-          <span className="avatar foe" title={playerNames[foeIndex]}>{(playerNames[foeIndex] || 'A')[0].toUpperCase()}</span>
-          <span className="hp-heart">{'♥'.repeat(Math.max(0, foe.hp))}{'♡'.repeat(Math.max(0, 2 - foe.hp))}</span>
-          {foe.revealedUntilMove && <span className="status revealed">révélé</span>}
-        </span>
         <button className="log-toggle" onClick={() => setShowRules(true)} aria-label="Règles">❓</button>
         <button className="log-toggle" onClick={() => setShowLog(true)} aria-label="Journal">📜</button>
       </div>
@@ -246,6 +241,21 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
           ))}
         </div>
       )}
+      {/* Les deux joueurs face à face, au-dessus du plateau */}
+      <div className="players-strip">
+        <span className="player-side mine">
+          <span className="avatar me" title={playerNames[viewer]}>{(playerNames[viewer] || 'V')[0].toUpperCase()}</span>
+          <span className="hp-heart">{'♥'.repeat(Math.max(0, me.hp))}{'♡'.repeat(Math.max(0, 2 - me.hp))}</span>
+          <span className="ap-pip">⚡{me.ap}</span>
+          {me.freeMoveAvailable && <span className="status" style={{ color: 'var(--gold)' }}>repli</span>}
+        </span>
+        <span className="player-side theirs">
+          {foe.revealedUntilMove && <span className="status revealed">révélé</span>}
+          <span className="hp-heart">{'♥'.repeat(Math.max(0, foe.hp))}{'♡'.repeat(Math.max(0, 2 - foe.hp))}</span>
+          <span className="avatar foe" title={playerNames[foeIndex]}>{(playerNames[foeIndex] || 'A')[0].toUpperCase()}</span>
+        </span>
+      </div>
+
       {/* Plateau — occupe l'essentiel de l'écran */}
       <div className="board-wrap">
         <div className="board">
@@ -269,12 +279,6 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       {/* Barre fixe : mes stats + fin de tour */}
       <div className="bottom-bar">
         <div className="bottom-bar-inner">
-          <span className="bar-stats">
-            <span className="avatar me" title={playerNames[viewer]}>{(playerNames[viewer] || 'V')[0].toUpperCase()}</span>
-            <span className="hp-heart">{'♥'.repeat(Math.max(0, me.hp))}{'♡'.repeat(Math.max(0, 2 - me.hp))}</span>
-            <span className="ap-pip">⚡{me.ap}</span>
-            {me.freeMoveAvailable && <span className="status" style={{ color: 'var(--gold)' }}>repli</span>}
-          </span>
           <button className="btn" disabled={!myTurn} onClick={() => onAction({ type: 'end_turn' })}>
             Fin de tour
           </button>
@@ -378,6 +382,8 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
     const direct = directTargets.includes(id);
     const hasOptions = myTurn && optionsFor(id).length > 0;
     const clickable = direct || hasOptions;
+    // Actions affichées au survol (PC) — mêmes options que la roue
+    const hoverOpts = myTurn && !isSetup && !pendingForMe ? optionsFor(id) : [];
     const flooded = state.basementFlood.active && id === 8;
     const showMe = me.room === id && !isSetup;
     const showFoe = foe.room === id && (foe.revealedUntilMove || state.phase === 'finished');
@@ -389,12 +395,31 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
         className={`room ${id === 8 ? 'basement' : ''} ${flooded ? 'flooded' : ''} ${clickable ? 'targetable' : 'not-targetable'} ${isCurrent ? 'current' : ''} ${isNeighbor ? 'neighbor' : ''}`}
         style={{ gridArea: area }}
         onClick={(e) => clickRoomEl(id, e)}
+        data-room={id}
         aria-label={ROOMS[id].name}
       >
         <span className="room-name">{ROOMS[id].name}</span>
         <span className="room-tags">
           {showMe && <span className="token me" title={playerNames[viewer]}>{(playerNames[viewer] || 'V')[0].toUpperCase()}</span>}
           {showFoe && <span className="token foe" title={playerNames[viewer === 0 ? 1 : 0]}>{(playerNames[viewer === 0 ? 1 : 0] || 'A')[0].toUpperCase()}</span>}
+          {hoverOpts.length > 0 && (
+            <span className="room-actions">
+              {hoverOpts.map((opt, i) => (
+                <span
+                  key={i}
+                  role="button"
+                  className="room-action-chip"
+                  title={`${opt.label} (${opt.cost})`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    pick(opt);
+                  }}
+                >
+                  {opt.icon} {opt.label}
+                </span>
+              ))}
+            </span>
+          )}
           {me.traps.includes(id) && <span className="tag trap">piège</span>}
           {me.delayedTraps.includes(id) && <span className="tag delayed">retardé</span>}
           {flooded && <span className="tag flood">inondé</span>}

@@ -1434,7 +1434,7 @@ input::placeholder { color: #9a938a; }
   border-width: 3px;
 }
 .room.neighbor::after {
-  content: '🚪';
+  content: '👣';
   position: absolute;
   top: 4px;
   right: 5px;
@@ -1729,3 +1729,62 @@ body { color: #16130f; }
 .friends-header { color: #16120c; border-bottom: 2px solid #16120c; }
 .friends-section { color: #6d675c; border-bottom-color: #b9af97; }
 .friend-name { color: #16120c; }
+
+/* ==========================================================================
+   Retours PC : curseur, rangée des joueurs, actions au survol
+   ========================================================================== */
+
+/* 1) Plus de curseur de texte : les pièces sont des boutons */
+.room, .room * { user-select: none; -webkit-user-select: none; }
+.room { cursor: pointer; }
+button { user-select: none; }
+
+/* 2) Les deux joueurs face à face au-dessus du plateau */
+.players-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  background: #efe9db;
+  border: 2px solid #16120c;
+  color: #16120c;
+}
+.player-side { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; }
+.player-side .hp-heart { color: var(--red); letter-spacing: 2px; }
+.player-side .ap-pip { font-weight: 700; color: #2f6b3c; }
+
+/* 4) Actions au survol — uniquement à la souris (PC), jamais au tactile */
+.room { position: relative; }
+.room-actions { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .room-actions {
+    display: none;
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: flex-start;
+    z-index: 3;
+  }
+  .room:hover .room-actions { display: flex; }
+  .room-action-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 8px;
+    font-size: 11.5px;
+    font-weight: 700;
+    background: #ffffff;
+    border: 2px solid #16120c;
+    color: #16120c;
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.7);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .room-action-chip:hover { background: #16120c; color: #f2efe6; }
+  .room-action-chip:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.7); }
+}
