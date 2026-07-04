@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ADJACENCY, ALL_ROOMS, LINE_OF_SIGHT, ROOMS, RoomId, reachable } from '../game/board';
-import { GameAction, GameState, PlayerIndex, roomEffectCost } from '../game/engine';
+import { GameAction, GameState, PlayerIndex, hasValidAction, roomEffectCost } from '../game/engine';
 import { ActionIcon, Hearts } from './icons';
 import { ROOM_DECOR } from './decor';
 import { useGameEvents } from './useGameEvents';
@@ -59,6 +59,20 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
   const isSetup = state.phase === 'setup';
   const pendingForMe = Boolean(state.pending && state.pending.responder === viewer);
   const myTurn = state.phase === 'playing' && state.active === viewer && !state.pending && canAct;
+
+  // Invite « Repliez-vous » : dès qu'un repli gratuit devient disponible pour moi
+  const [foldPrompt, setFoldPrompt] = useState(false);
+  const prevFold = useRef(false);
+  useEffect(() => {
+    const canFold = myTurn && me.freeMoveAvailable && !isSetup && !pendingForMe;
+    if (canFold && !prevFold.current) {
+      setFoldPrompt(true);
+      const t = setTimeout(() => setFoldPrompt(false), 2200);
+      prevFold.current = true;
+      return () => clearTimeout(t);
+    }
+    if (!canFold) prevFold.current = false;
+  }, [myTurn, me.freeMoveAvailable, isSetup, pendingForMe]);
 
   const directTargets: RoomId[] = useMemo(() => {
     if (isSetup) return canAct ? [...ALL_ROOMS] : [];
@@ -152,6 +166,11 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       return;
     }
     if (!myTurn) return;
+    // Repli actif : cliquer une pièce adjacente = repli immédiat, sans passer par la roue
+    if (me.freeMoveAvailable && me.room !== null && ADJACENCY[me.room].includes(room)) {
+      onAction({ type: 'move', room });
+      return;
+    }
     if (optionsFor(room).length > 0) setWheelRoom(room);
   }
 
@@ -159,6 +178,8 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
   function clickRoomEl(room: RoomId, e: React.MouseEvent<HTMLButtonElement>) {
     clickRoom(room);
     if (isSetup || pendingForMe) return;
+    // Repli direct : pas de roue à ancrer
+    if (me.freeMoveAvailable && me.room !== null && ADJACENCY[me.room].includes(room)) return;
     if (optionsFor(room).length === 0) return;
     // Point de toucher exact ; repli sur le centre de la pièce (clavier)
     let cx = e.clientX;
@@ -207,8 +228,15 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
 
   return (
     <div className="game-with-bar">
+      {/* Invite de repli — prioritaire, guide le joueur */}
+      {foldPrompt && (
+        <div className="event-banner major tone-reveal" key="fold-prompt">
+          <span className="event-icon"><ActionIcon k="runner" size={26} /></span>
+          <span className="event-text">Repliez-vous — touchez une pièce voisine</span>
+        </div>
+      )}
       {/* Bannière d'événement animée — un seul événement à la fois */}
-      {gameEvent && (
+      {!foldPrompt && gameEvent && (
         <div className={`event-banner ${gameEvent.weight} tone-${gameEvent.tone}`} key={gameEvent.id}>
           {gameEvent.icon && (
             <span className="event-icon">
@@ -283,7 +311,11 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       {/* Barre fixe : mes stats + fin de tour */}
       <div className="bottom-bar">
         <div className="bottom-bar-inner">
-          <button className="btn" disabled={!myTurn} onClick={() => onAction({ type: 'end_turn' })}>
+          <button
+            className={`btn ${myTurn && !hasValidAction(state, viewer) && !pendingForMe ? 'btn-gold pulse-end' : ''}`}
+            disabled={!myTurn}
+            onClick={() => onAction({ type: 'end_turn' })}
+          >
             Fin de tour
           </button>
           <button

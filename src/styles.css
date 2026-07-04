@@ -1889,3 +1889,12 @@ button { user-select: none; }
 .create-opt, .home-footer .btn-sm { display: inline-flex; align-items: center; gap: 7px; }
 .create-opt svg, .btn-sm svg { flex-shrink: 0; }
 .mode-btn-icon svg { display: block; }
+
+/* Bouton « Fin de tour » mis en évidence quand plus aucune action utile */
+.pulse-end {
+  animation: pulse-end 1.5s ease-in-out infinite;
+}
+@keyframes pulse-end {
+  0%, 100% { box-shadow: 3px 4px 0 rgba(0,0,0,.82); }
+  50% { box-shadow: 3px 4px 0 rgba(0,0,0,.82), 0 0 0 3px rgba(184,145,63,.55); }
+}
