@@ -187,9 +187,6 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
   }
 
   const visibleLog = state.log.filter((e) => e.visibility === 'both' || e.visibility === viewer);
-  const lastEvents = visibleLog
-    .filter((e) => !e.text.startsWith('Tour '))
-    .slice(-2);
   const wheelOptions = wheelRoom !== null ? optionsFor(wheelRoom) : [];
 
   const turnLabel = isSetup
@@ -248,16 +245,6 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       {legendText && <div className="legend-banner">{legendText}</div>}
 
 
-      {/* Dernière action, bien visible */}
-      {lastEvents.length > 0 && (
-        <div className="ticker">
-          {lastEvents.map((e, i) => (
-            <div key={`${e.turn}-${e.text}-${i}`} className={`ticker-line ${e.kind ?? ''} ${i === lastEvents.length - 1 ? 'latest' : ''}`}>
-              {named(e.text)}
-            </div>
-          ))}
-        </div>
-      )}
       {/* Les deux joueurs face à face, au-dessus du plateau */}
       <div className="players-strip">
         <span className="player-side mine">

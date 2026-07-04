@@ -210,10 +210,10 @@ export function hasValidAction(s: GameState, i: PlayerIndex): boolean {
 }
 
 function maybeAutoEnd(s: GameState) {
-  if (s.phase !== 'playing' || s.pending) return;
-  if (!hasValidAction(s, s.active)) {
-    endTurnInternal(s, true);
-  }
+  // Fin de tour désormais TOUJOURS manuelle : passer automatiquement le tour
+  // quand il ne reste plus d'action révélerait de l'information à l'adversaire
+  // (il déduirait que le joueur est coincé). Le joueur clique « Fin de tour ».
+  void s;
 }
 
 function endTurnInternal(s: GameState, auto: boolean) {
