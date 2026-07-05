@@ -42,16 +42,37 @@ export default function HomeScreen({
   const [createOpen, setCreateOpen] = useState(false);
   const [quick, setQuick] = useState<QuickPhase>({ k: 'idle' });
   const [tick, setTick] = useState(0); // pour les compteurs de secondes
+  const [confirmDeadline, setConfirmDeadline] = useState<number | null>(null);
   const [onlineCount, setOnlineCount] = useState<number | null>(null);
   const quickRef = useRef(quick);
   quickRef.current = quick;
 
-  // Compteur de secondes pendant les attentes
+  // Compteur de secondes pendant les attentes et les confirmations
   useEffect(() => {
-    if (quick.k !== 'searching' && quick.k !== 'awaiting') return;
+    if (!['searching', 'awaiting', 'found', 'proposed'].includes(quick.k)) return;
     const t = setInterval(() => setTick((v) => v + 1), 1000);
     return () => clearInterval(t);
   }, [quick.k]);
+
+  // Fenêtre de confirmation : 15 s, sinon refus automatique
+  const CONFIRM_MS = 15_000;
+  useEffect(() => {
+    if (quick.k === 'found' || quick.k === 'proposed') {
+      setConfirmDeadline(Date.now() + CONFIRM_MS);
+    } else {
+      setConfirmDeadline(null);
+    }
+  }, [quick.k]);
+
+  useEffect(() => {
+    if (!confirmDeadline) return;
+    if (Date.now() >= confirmDeadline) {
+      const q = quickRef.current;
+      if (q.k === 'found') setQuick({ k: 'idle' });
+      if (q.k === 'proposed') refuseAsHost();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tick, confirmDeadline]);
 
   // Joueurs en ligne (profils vus il y a moins de 70 s)
   useEffect(() => {
@@ -266,6 +287,9 @@ export default function HomeScreen({
         <div className="match-confirm">
           <p>
             {t('home.opponent')} : <strong>{quick.game.host_pseudo}</strong>
+            {confirmDeadline && (
+              <span className="confirm-timer"> · {Math.max(0, Math.ceil((confirmDeadline - Date.now()) / 1000))}s</span>
+            )}
           </p>
           <div className="row" style={{ gap: 8 }}>
             <button className="btn btn-gold" style={{ flex: 1 }} onClick={confirmAsSeeker}>{t('home.accept')}</button>
@@ -279,6 +303,9 @@ export default function HomeScreen({
         <div className="match-confirm">
           <p>
             {t('home.opponent')} : <strong>{quick.proposal.pseudo}</strong>
+            {confirmDeadline && (
+              <span className="confirm-timer"> · {Math.max(0, Math.ceil((confirmDeadline - Date.now()) / 1000))}s</span>
+            )}
           </p>
           <div className="row" style={{ gap: 8 }}>
             <button className="btn btn-gold" style={{ flex: 1 }} onClick={acceptAsHost}>{t('home.accept')}</button>

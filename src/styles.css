@@ -1934,3 +1934,5 @@ button { user-select: none; }
   color: #f2efe6;
 }
 .lang-btn:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 rgba(0,0,0,.6); }
+
+.confirm-timer { font-weight: 700; color: var(--red); font-family: 'Special Elite', monospace; }
