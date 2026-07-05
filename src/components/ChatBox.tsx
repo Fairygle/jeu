@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '../i18n';
 import { UiIcon } from './icons';
+import { AvatarIcon } from './avatars';
 
 export interface ChatMessage {
   from: string; // userId
@@ -15,9 +16,11 @@ interface Props {
   onSend: (text: string) => void;
   opponentName: string;
   opponentOnline: boolean;
+  myAvatar?: string | null;
+  opponentAvatar?: string | null;
 }
 
-export default function ChatBox({ messages, myId, onSend, opponentName, opponentOnline }: Props) {
+export default function ChatBox({ messages, myId, onSend, opponentName, opponentOnline, myAvatar, opponentAvatar }: Props) {
   const { t } = useI18n();
   const [text, setText] = useState('');
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -40,17 +43,23 @@ export default function ChatBox({ messages, myId, onSend, opponentName, opponent
     <div className="chat-bar">
       <div className="chat-bar-status">
         <span className={`presence-dot ${opponentOnline ? 'on' : 'off'}`} />
+        {opponentAvatar && <AvatarIcon avatar={opponentAvatar} size={15} />}
         <span className="chat-bar-name">{opponentName}</span>
         <span className="chat-bar-state">{opponentOnline ? t('mp.online') : t('mp.offline')}</span>
       </div>
       <div className="chat-bar-messages" ref={scrollRef}>
         {recent.length === 0 && <div className="chat-empty">Écrivez un message à votre adversaire…</div>}
-        {recent.map((m, i) => (
-          <div key={i} className={`chat-line ${m.from === myId ? 'mine' : 'theirs'}`}>
-            <span className="chat-line-name">{m.from === myId ? 'Vous' : m.name}</span>
-            <span className="chat-line-text">{m.text}</span>
-          </div>
-        ))}
+        {recent.map((m, i) => {
+          const mine = m.from === myId;
+          const av = mine ? myAvatar : opponentAvatar;
+          return (
+            <div key={i} className={`chat-line ${mine ? 'mine' : 'theirs'}`}>
+              {av && <span className="chat-line-avatar"><AvatarIcon avatar={av} size={14} /></span>}
+              <span className="chat-line-name">{mine ? 'Vous' : m.name}</span>
+              <span className="chat-line-text">{m.text}</span>
+            </div>
+          );
+        })}
       </div>
       <div className="chat-bar-input">
         <input

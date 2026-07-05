@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '../i18n';
 import { UiIcon } from './icons';
+import { AvatarIcon } from './avatars';
 import { supabase } from '../lib/supabase';
 
 interface Props {
@@ -19,6 +20,7 @@ interface LobbyMsg {
 export default function LobbyChat({ userId, pseudo }: Props) {
   const { t } = useI18n();
   const [messages, setMessages] = useState<LobbyMsg[]>([]);
+  const [avatars, setAvatars] = useState<Record<string, string>>({});
   const [text, setText] = useState('');
   const [ready, setReady] = useState(true);
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -55,6 +57,25 @@ export default function LobbyChat({ userId, pseudo }: Props) {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages.length]);
 
+  // Récupère les avatars des auteurs des messages affichés (une seule fois par auteur)
+  useEffect(() => {
+    if (!supabase) return;
+    const ids = Array.from(new Set(messages.map((m) => m.user_id))).filter((id) => !(id in avatars));
+    if (ids.length === 0) return;
+    supabase
+      .from('profiles')
+      .select('id, avatar')
+      .in('id', ids)
+      .then(({ data }) => {
+        if (!data) return;
+        setAvatars((prev) => {
+          const next = { ...prev };
+          for (const p of data) next[p.id] = p.avatar ?? '';
+          return next;
+        });
+      });
+  }, [messages, avatars]);
+
   async function submit() {
     const t = text.trim();
     if (!t || !supabase) return;
@@ -73,6 +94,7 @@ export default function LobbyChat({ userId, pseudo }: Props) {
         {ready &&
           messages.map((m) => (
             <div key={m.id} className={`chat-line ${m.user_id === userId ? 'mine' : 'theirs'}`}>
+              {avatars[m.user_id] && <span className="chat-line-avatar"><AvatarIcon avatar={avatars[m.user_id]} size={14} /></span>}
               <span className="chat-line-name">{m.user_id === userId ? 'Vous' : m.pseudo}</span>
               <span className="chat-line-text">{m.text}</span>
             </div>

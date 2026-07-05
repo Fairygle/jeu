@@ -992,6 +992,7 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 }
 .chat-empty { color: var(--muted); font-size: 12px; text-align: center; margin: auto; }
 .chat-line { font-size: 13px; line-height: 1.3; }
+.chat-line-avatar { display: inline-flex; vertical-align: -2px; margin-right: 3px; opacity: 0.85; }
 .chat-line-name { font-weight: 700; margin-right: 5px; font-size: 11px; }
 .chat-line.mine .chat-line-name { color: var(--gold); }
 .chat-line.theirs .chat-line-name { color: var(--blue); }

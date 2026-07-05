@@ -67,6 +67,7 @@ export default function OnlineGame({ userId, pseudo, onBack, initialMode = 'code
   const [busy, setBusy] = useState(false);
   const [opponentOnline, setOpponentOnline] = useState(false);
   const [opponentLeft, setOpponentLeft] = useState(false);
+  const [avatars, setAvatars] = useState<Record<string, string>>({});
   const [foundGame, setFoundGame] = useState<GameRow | null>(null); // proposition de match
   const [searching, setSearching] = useState(false);
   const { t } = useI18n();
@@ -203,6 +204,23 @@ export default function OnlineGame({ userId, pseudo, onBack, initialMode = 'code
       createGame(false);
     }
   }, [initialMode, row]);
+
+  // Avatars des deux joueurs (pour le chat)
+  useEffect(() => {
+    if (!supabase || !row?.host_id) return;
+    const ids = [row.host_id, row.guest_id].filter(Boolean) as string[];
+    if (ids.length === 0) return;
+    supabase
+      .from('profiles')
+      .select('id, avatar')
+      .in('id', ids)
+      .then(({ data }) => {
+        if (!data) return;
+        const map: Record<string, string> = {};
+        for (const p of data) if (p.avatar) map[p.id] = p.avatar;
+        setAvatars(map);
+      });
+  }, [row?.host_id, row?.guest_id]);
 
   // Enregistre les stats (parties jouées/gagnées/tours) une seule fois par partie terminée
   const statsRecorded = useRef<string | null>(null);
@@ -411,6 +429,8 @@ export default function OnlineGame({ userId, pseudo, onBack, initialMode = 'code
         onSend={sendMessage}
         opponentName={opponentName}
         opponentOnline={opponentOnline}
+        myAvatar={avatars[userId] ?? null}
+        opponentAvatar={avatars[me === 0 ? row.guest_id ?? '' : row.host_id] ?? null}
       />
 
       {opponentLeft && s.phase !== 'finished' && (
