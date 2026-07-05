@@ -38,7 +38,7 @@ export default function HomeScreen({
   onLogout,
   onlineEnabled,
 }: Props) {
-  const { t, lang, setLang } = useI18n();
+  const { t } = useI18n();
   const [createOpen, setCreateOpen] = useState(false);
   const [quick, setQuick] = useState<QuickPhase>({ k: 'idle' });
   const [tick, setTick] = useState(0); // pour les compteurs de secondes
@@ -223,17 +223,7 @@ export default function HomeScreen({
             {onlineCount !== null && <span className="online-count"> · 🟢 {onlineCount} {t('home.online')}</span>}
           </p>
         </div>
-        <div className="brand-right">
-          <div className="lang-switch">
-            <button className={`lang-btn ${lang === 'fr' ? 'active' : ''}`} onClick={() => setLang('fr')}>
-              FR
-            </button>
-            <button className={`lang-btn ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')}>
-              EN
-            </button>
-          </div>
-          {userId && <FriendsSidebar userId={userId} />}
-        </div>
+        {userId && <FriendsSidebar userId={userId} />}
       </div>
 
       <div className="mode-row three">

@@ -6,11 +6,13 @@ import RulesScreen from './screens/RulesScreen';
 import LocalGame from './screens/LocalGame';
 import OnlineGame from './screens/OnlineGame';
 import { supabase, supabaseConfigured } from './lib/supabase';
+import { useI18n } from './i18n';
 
 type Screen = 'home' | 'rules' | 'local' | 'online';
 type OnlineMode = 'code' | 'join';
 
 export default function App() {
+  const { lang, setLang } = useI18n();
   const [session, setSession] = useState<Session | null>(null);
   const [guest, setGuest] = useState(false);
   const [screen, setScreen] = useState<Screen>('home');
@@ -72,7 +74,17 @@ export default function App() {
               Revolver Noir
               <small>huit pièces · deux vies</small>
             </div>
-            <span className="muted small">{pseudo ?? 'Invité'}</span>
+            <div className="topbar-right">
+              <div className="lang-switch">
+                <button className={`lang-btn ${lang === 'fr' ? 'active' : ''}`} onClick={() => setLang('fr')}>
+                  FR
+                </button>
+                <button className={`lang-btn ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')}>
+                  EN
+                </button>
+              </div>
+              <span className="muted small">{pseudo ?? 'Invité'}</span>
+            </div>
           </div>
           <HomeScreen
             pseudo={pseudo}
