@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import LobbyChat from '../components/LobbyChat';
 import { UiIcon } from '../components/icons';
+import BrandLogo from '../components/logo';
 import { useI18n } from '../i18n';
 import FriendsSidebar from '../components/FriendsSidebar';
 import { newGame } from '../game/engine';
@@ -236,7 +237,7 @@ export default function HomeScreen({
   return (
     <div className="container home-page">
       <div className="brand-row">
-        <img src={import.meta.env.BASE_URL + 'map.jpg'} alt="" className="brand-thumb" />
+        <BrandLogo className="brand-thumb" />
         <div style={{ flex: 1, minWidth: 0 }}>
           <h1 className="brand-title">Revolver Noir</h1>
           <p className="brand-sub">
