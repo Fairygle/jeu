@@ -219,18 +219,21 @@ export default function HomeScreen({
         <div style={{ flex: 1, minWidth: 0 }}>
           <h1 className="brand-title">Revolver Noir</h1>
           <p className="brand-sub">
-            <button
-              className="lang-toggle"
-              onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}
-              title={lang === 'fr' ? 'Switch to English' : 'Passer en français'}
-            >
-              {lang === 'fr' ? 'FR' : 'EN'}
-            </button>
             {pseudo ?? ''}
             {onlineCount !== null && <span className="online-count"> · 🟢 {onlineCount} {t('home.online')}</span>}
           </p>
         </div>
-        {userId && <FriendsSidebar userId={userId} />}
+        <div className="brand-right">
+          <div className="lang-switch">
+            <button className={`lang-btn ${lang === 'fr' ? 'active' : ''}`} onClick={() => setLang('fr')}>
+              FR
+            </button>
+            <button className={`lang-btn ${lang === 'en' ? 'active' : ''}`} onClick={() => setLang('en')}>
+              EN
+            </button>
+          </div>
+          {userId && <FriendsSidebar userId={userId} />}
+        </div>
       </div>
 
       <div className="mode-row three">
