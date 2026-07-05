@@ -90,6 +90,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
   // --- Animation des déplacements : mesure réelle des pièces + jetons flottants ---
   const boardWrapRef = useRef<HTMLDivElement>(null);
   const roomRefs = useRef<Map<RoomId, HTMLElement>>(new Map());
+  const stairRefs = useRef<Map<string, HTMLElement>>(new Map());
   const [doorMarks, setDoorMarks] = useState<{ x: number; y: number; vertical: boolean }[]>([]);
 
   // Positionne les petites portes sur les cloisons entre pièces adjacentes
@@ -160,8 +161,9 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
     meVisible,
     myLastMoveKey === 'log.doubleMoveMine',
     addPuff,
+    stairRefs,
   );
-  const foeStyle = useTokenAnim(boardWrapRef, roomRefs, isSetup ? null : foe.room, foeVisible, false, addPuff);
+  const foeStyle = useTokenAnim(boardWrapRef, roomRefs, isSetup ? null : foe.room, foeVisible, false, addPuff, stairRefs);
 
   const directTargets: RoomId[] = useMemo(() => {
     if (isSetup) return canAct ? [...ALL_ROOMS] : [];
@@ -414,9 +416,9 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
           {renderRoom('n5', 5)}
           {renderRoom('n7', 7)}
           <div className="floor-label" style={{ gridArea: 'lbl1' }}>{t('game.floor.ground')}</div>
-          <div className="stair stair-left" aria-hidden="true" />
-          <div className="stair stair-mid" aria-hidden="true" />
-          <div className="stair stair-right" aria-hidden="true" />
+          <div className="stair stair-left" aria-hidden="true" ref={(el) => { if (el) stairRefs.current.set('4-6', el); }} />
+          <div className="stair stair-mid" aria-hidden="true" ref={(el) => { if (el) stairRefs.current.set('1-7', el); }} />
+          <div className="stair stair-right" aria-hidden="true" ref={(el) => { if (el) stairRefs.current.set('5-8', el); }} />
           {renderRoom('n4', 4)}
           {renderRoom('n1', 1)}
           {renderRoom('n2', 2)}

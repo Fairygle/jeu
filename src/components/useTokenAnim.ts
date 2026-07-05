@@ -61,6 +61,10 @@ const STEP_MS = 150; // durée par segment élémentaire du trajet
 const EASE = 'cubic-bezier(0.4, 0, 0.2, 1)';
 const EASE_END = 'cubic-bezier(0.34, 1.12, 0.64, 1)';
 
+function stairKey(a: RoomId, b: RoomId): string {
+  return a < b ? `${a}-${b}` : `${b}-${a}`;
+}
+
 export function useTokenAnim(
   boardWrapRef: RefObject<HTMLDivElement>,
   roomRefs: RefObject<Map<RoomId, HTMLElement>>,
@@ -68,6 +72,7 @@ export function useTokenAnim(
   visible: boolean,
   isDoubleHop: boolean,
   onPuff: (x: number, y: number) => void,
+  stairRefs?: RefObject<Map<string, HTMLElement>>,
 ) {
   const [style, setStyle] = useState<TokenStyle>({ left: 0, top: 0, opacity: 0, transition: 'none' });
   const prevRoom = useRef<RoomId | null>(null);
@@ -130,16 +135,30 @@ export function useTokenAnim(
       } else {
         const rawWaypoints: Pt[] = [];
         const rawStops: boolean[] = [];
+        let cursor: Pt = { x: rects[0]!.cx, y: rects[0]!.cy };
+        const pushOrtho = (target: Pt, stop: boolean) => {
+          // Décompose le trajet cursor -> target en 2 segments à 90° (L).
+          // On bouge d'abord sur l'axe du plus grand écart, puis sur l'autre.
+          const dx = Math.abs(target.x - cursor.x);
+          const dy = Math.abs(target.y - cursor.y);
+          if (dx > 1.5 && dy > 1.5) {
+            const corner: Pt = dx >= dy ? { x: target.x, y: cursor.y } : { x: cursor.x, y: target.y };
+            rawWaypoints.push(corner);
+            rawStops.push(false);
+            cursor = corner;
+          }
+          rawWaypoints.push(target);
+          rawStops.push(stop);
+          cursor = target;
+        };
         for (let i = 0; i < rects.length - 1; i++) {
           const ra = rects[i]!;
           const rb = rects[i + 1]!;
-          // Point de passage exact (centre de la porte / de l'escalier)
-          const gate = gatePoint(ra, rb);
-          rawWaypoints.push(gate);
-          rawStops.push(false);
-          // puis entrée au centre de la pièce suivante
-          rawWaypoints.push({ x: rb.cx, y: rb.cy });
-          rawStops.push(true);
+          // Escalier entre ces deux pièces ? -> passer par son centre
+          const stEl = stairRefs?.current?.get(stairKey(chain[i], chain[i + 1]));
+          const gate = stEl ? (() => { const r = rectOf(wrap, stEl); return { x: r.cx, y: r.cy }; })() : gatePoint(ra, rb);
+          pushOrtho(gate, false); // rejoint la porte/l'escalier en L
+          pushOrtho({ x: rb.cx, y: rb.cy }, true); // entre au centre en L
         }
         // Retire les points quasi identiques consécutifs (évite les temps morts)
         const stopFlags: boolean[] = [];
