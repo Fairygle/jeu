@@ -6,6 +6,7 @@ import { ROOM_DECOR } from './decor';
 import { useGameEvents } from './useGameEvents';
 import { useI18n } from '../i18n';
 import { renderLog } from '../logI18n';
+import { useTokenAnim } from './useTokenAnim';
 
 interface Props {
   state: GameState;
@@ -71,6 +72,39 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
     }
     if (!canFold) prevFold.current = false;
   }, [myTurn, me.freeMoveAvailable, isSetup, pendingForMe]);
+
+  // --- Animation des déplacements : mesure réelle des pièces + jetons flottants ---
+  const boardWrapRef = useRef<HTMLDivElement>(null);
+  const roomRefs = useRef<Map<RoomId, HTMLElement>>(new Map());
+  const [puffs, setPuffs] = useState<{ id: number; x: number; y: number }[]>([]);
+  const puffId = useRef(0);
+  function addPuff(x: number, y: number) {
+    const id = ++puffId.current;
+    setPuffs((p) => [...p.slice(-5), { id, x, y }]);
+    window.setTimeout(() => setPuffs((p) => p.filter((q) => q.id !== id)), 500);
+  }
+
+  // Mon dernier déplacement loggé : détermine s'il faut animer un sprint en 2 temps
+  const myLastMoveKey = useMemo(() => {
+    for (let i = state.log.length - 1; i >= 0 && i >= state.log.length - 8; i--) {
+      const e = state.log[i];
+      if (e.actor === viewer && e.key && (e.visibility === viewer || e.visibility === 'both')) return e.key;
+    }
+    return null;
+  }, [state.log.length, viewer]);
+
+  const meVisible = !isSetup && me.room !== null;
+  const foeVisible = !isSetup && foe.room !== null && (foe.revealedUntilMove || state.phase === 'finished');
+
+  const meStyle = useTokenAnim(
+    boardWrapRef,
+    roomRefs,
+    isSetup ? null : me.room,
+    meVisible,
+    myLastMoveKey === 'log.doubleMoveMine',
+    addPuff,
+  );
+  const foeStyle = useTokenAnim(boardWrapRef, roomRefs, isSetup ? null : foe.room, foeVisible, false, addPuff);
 
   const directTargets: RoomId[] = useMemo(() => {
     if (isSetup) return canAct ? [...ALL_ROOMS] : [];
@@ -287,7 +321,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       </div>
 
       {/* Plateau — occupe l'essentiel de l'écran */}
-      <div className="board-wrap">
+      <div className="board-wrap" ref={boardWrapRef}>
         <div className="board">
           <div className="floor-label first" style={{ gridArea: 'lbl2' }}>{t('game.floor.top')}</div>
           {renderRoom('n6', 6)}
@@ -303,6 +337,33 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
           {renderRoom('n2', 2)}
           <div className="floor-label" style={{ gridArea: 'lbl0' }}>{t('game.floor.basement')}</div>
           {renderRoom('n8', 8)}
+        </div>
+
+        {/* Calque des jetons flottants — glissement animé, mesuré en pixels réels */}
+        <div className="token-layer" aria-hidden="true">
+          {meVisible && (
+            <span
+              className="token me floating"
+              title={playerNames[viewer]}
+              style={{ left: meStyle.left, top: meStyle.top, opacity: meStyle.opacity, transition: meStyle.transition }}
+            >
+              {(playerNames[viewer] || 'V')[0].toUpperCase()}
+            </span>
+          )}
+          {foeVisible && (
+            <span
+              className="token foe floating"
+              title={playerNames[viewer === 0 ? 1 : 0]}
+              style={{ left: foeStyle.left, top: foeStyle.top, opacity: foeStyle.opacity, transition: foeStyle.transition }}
+            >
+              {(playerNames[viewer === 0 ? 1 : 0] || 'A')[0].toUpperCase()}
+            </span>
+          )}
+          {puffs.map((p) => (
+            <span key={p.id} className="step-puff" style={{ left: p.x, top: p.y }}>
+              <ActionIcon k="footprint" size={13} />
+            </span>
+          ))}
         </div>
       </div>
 
@@ -419,13 +480,14 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
     // Actions affichées au survol (PC) — mêmes options que la roue
     const hoverOpts = myTurn && !isSetup && !pendingForMe ? optionsFor(id) : [];
     const flooded = state.basementFlood.active && id === 8;
-    const showMe = me.room === id && !isSetup;
-    const showFoe = foe.room === id && (foe.revealedUntilMove || state.phase === 'finished');
     const isCurrent = me.room === id && !isSetup;
     const isNeighbor = neighborRooms.includes(id);
     return (
       <button
         key={id}
+        ref={(el) => {
+          if (el) roomRefs.current.set(id, el);
+        }}
         className={`room ${id === 8 ? 'basement' : ''} ${flooded ? 'flooded' : ''} ${clickable ? 'targetable' : 'not-targetable'} ${isCurrent ? 'current' : ''} ${isNeighbor ? 'neighbor' : ''}`}
         style={{ gridArea: area }}
         onClick={(e) => clickRoomEl(id, e)}
@@ -436,8 +498,6 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
         <span className="room-tags">
           {isNeighbor && <span className="pas-mark"><ActionIcon k={me.freeMoveAvailable && !isSetup && !pendingForMe ? 'runner' : 'footprint'} size={15} /></span>}
           {ROOM_DECOR[id] && <span className="room-decor" aria-hidden="true">{ROOM_DECOR[id]}</span>}
-          {showMe && <span className="token me" title={playerNames[viewer]}>{(playerNames[viewer] || 'V')[0].toUpperCase()}</span>}
-          {showFoe && <span className="token foe" title={playerNames[viewer === 0 ? 1 : 0]}>{(playerNames[viewer === 0 ? 1 : 0] || 'A')[0].toUpperCase()}</span>}
           {hoverOpts.length > 0 && (
             <span className="room-actions">
               {hoverOpts.map((opt, i) => (

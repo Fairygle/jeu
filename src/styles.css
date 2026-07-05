@@ -876,7 +876,7 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .error-mini { padding: 6px 10px; font-size: 12px; margin-bottom: 6px; }
 
 /* Le plateau prend toute la place restante, sans panneau ni titre superflu */
-.board-wrap { padding: 2px; }
+.board-wrap { padding: 2px; position: relative; }
 
 .board {
   display: grid;
@@ -1936,3 +1936,39 @@ button { user-select: none; }
 .lang-btn:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 rgba(0,0,0,.6); }
 
 .confirm-timer { font-weight: 700; color: var(--red); font-family: 'Special Elite', monospace; }
+
+/* ==========================================================================
+   Jetons flottants animés — glissement d'une pièce à l'autre
+   ========================================================================== */
+
+.token-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+.token.floating {
+  position: absolute;
+  margin: 0;
+  transform: translate(-50%, -50%);
+  will-change: left, top, opacity;
+}
+
+/* Pichenette de pas au départ et à chaque arrêt */
+.step-puff {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  color: #16120c;
+  opacity: 0.75;
+  animation: step-puff-fade 480ms ease-out forwards;
+}
+@keyframes step-puff-fade {
+  0% { opacity: 0.85; transform: translate(-50%, -50%) scale(0.85); }
+  30% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.05); }
+  100% { opacity: 0; transform: translate(-50%, -60%) scale(1.15); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .token.floating { transition: none !important; }
+  .step-puff { animation: none; opacity: 0; }
+}
