@@ -2003,3 +2003,88 @@ button { user-select: none; }
   line-height: 1;
   padding: 0;
 }
+
+/* ==========================================================================
+   Bouton pseudo + popup profil (stats + avatar)
+   ========================================================================== */
+
+.pseudo-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.pseudo-button:active { transform: none; box-shadow: none; }
+.brand-sub-text { text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
+
+.profile-modal { width: min(360px, 92vw); }
+.profile-body { padding: 14px 16px 18px; }
+
+.profile-avatar-current {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  margin: 0 auto 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #fff, #ece5d4);
+  border: 2px solid #16120c;
+  box-shadow: 2px 3px 0 rgba(0,0,0,.7);
+}
+.profile-initial { font-family: 'Special Elite', monospace; font-size: 22px; font-weight: 700; color: #16120c; }
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.stat-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 4px;
+  background: #efe9db;
+  border: 2px solid #16120c;
+}
+.stat-value { font-family: 'Special Elite', monospace; font-size: 20px; font-weight: 700; color: #16120c; }
+.stat-label { font-size: 9.5px; text-align: center; color: #6d675c; text-transform: uppercase; letter-spacing: 0.04em; }
+
+.profile-section-title {
+  font-family: 'Special Elite', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #6d675c;
+  border-bottom: 1px solid #b9af97;
+  padding-bottom: 4px;
+  margin-bottom: 10px;
+}
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.avatar-opt {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #fff, #ece5d4);
+  border: 2px solid #16120c;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.6);
+}
+.avatar-opt.selected {
+  background: #16120c;
+  box-shadow: 2px 2px 0 rgba(163,35,29,.7);
+}
+.avatar-opt.selected svg g { stroke: #f2efe6; }
+.avatar-opt.selected svg path[fill="#16120c"] { fill: #f2efe6; }
+.avatar-opt.selected svg circle[fill="#16120c"] { fill: #f2efe6; }

@@ -204,6 +204,27 @@ export default function OnlineGame({ userId, pseudo, onBack, initialMode = 'code
     }
   }, [initialMode, row]);
 
+  // Enregistre les stats (parties jouées/gagnées/tours) une seule fois par partie terminée
+  const statsRecorded = useRef<string | null>(null);
+  useEffect(() => {
+    if (!supabase || !row || row.state.phase !== 'finished') return;
+    if (statsRecorded.current === row.id) return;
+    statsRecorded.current = row.id;
+    const meIdx: PlayerIndex = row.host_id === userId ? 0 : 1;
+    const won = row.state.winner === meIdx;
+    const turns = row.state.turnNumber;
+    (async () => {
+      const { data } = await supabase!.from('profiles').select('games_played, games_won, turns_sum').eq('id', userId).maybeSingle();
+      await supabase!.from('profiles').upsert({
+        id: userId,
+        pseudo,
+        games_played: (data?.games_played ?? 0) + 1,
+        games_won: (data?.games_won ?? 0) + (won ? 1 : 0),
+        turns_sum: (data?.turns_sum ?? 0) + turns,
+      });
+    })();
+  }, [row?.id, row?.state.phase, userId, pseudo]);
+
   async function confirmJoin(target: GameRow) {
     if (!supabase) return;
     setBusy(true);

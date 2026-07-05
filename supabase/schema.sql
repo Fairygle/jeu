@@ -143,3 +143,11 @@ create policy "lobby_messages_insert" on public.lobby_messages
   for insert to authenticated with check (auth.uid() = user_id);
 
 alter publication supabase_realtime add table public.lobby_messages;
+-- Stats de jeu + avatar sur les profils.
+-- À exécuter dans : Supabase -> SQL Editor -> New query -> Run
+
+alter table public.profiles
+  add column if not exists avatar text,
+  add column if not exists games_played integer not null default 0,
+  add column if not exists games_won integer not null default 0,
+  add column if not exists turns_sum integer not null default 0;

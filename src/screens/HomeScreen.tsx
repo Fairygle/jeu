@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import LobbyChat from '../components/LobbyChat';
 import { UiIcon } from '../components/icons';
 import BrandLogo from '../components/logo';
+import ProfileModal from '../components/ProfileModal';
+import { AvatarIcon } from '../components/avatars';
 import { useI18n } from '../i18n';
 import FriendsSidebar from '../components/FriendsSidebar';
 import { newGame } from '../game/engine';
@@ -41,6 +43,8 @@ export default function HomeScreen({
 }: Props) {
   const { t } = useI18n();
   const [createOpen, setCreateOpen] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [myAvatar, setMyAvatar] = useState<string | null>(null);
   const [quick, setQuick] = useState<QuickPhase>({ k: 'idle' });
   const [tick, setTick] = useState(0); // pour les compteurs de secondes
   const [confirmDeadline, setConfirmDeadline] = useState<number | null>(null);
@@ -74,6 +78,14 @@ export default function HomeScreen({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tick, confirmDeadline]);
+
+  // Avatar choisi (pour l'affichage à côté du pseudo)
+  useEffect(() => {
+    if (!supabase || !userId) return;
+    supabase.from('profiles').select('avatar').eq('id', userId).maybeSingle().then(({ data }) => {
+      if (data?.avatar) setMyAvatar(data.avatar);
+    });
+  }, [userId, showProfile]);
 
   // Joueurs en ligne (profils vus il y a moins de 70 s)
   useEffect(() => {
@@ -240,13 +252,20 @@ export default function HomeScreen({
         <BrandLogo className="brand-thumb" />
         <div style={{ flex: 1, minWidth: 0 }}>
           <h1 className="brand-title">Revolver Noir</h1>
-          <p className="brand-sub">
-            {pseudo ?? ''}
-            {onlineCount !== null && <span className="online-count"> · 🟢 {onlineCount} {t('home.online')}</span>}
-          </p>
+          <button className="pseudo-button" onClick={() => userId && setShowProfile(true)}>
+            {myAvatar && <AvatarIcon avatar={myAvatar} size={18} />}
+            <span className="brand-sub-text">
+              {pseudo ?? ''}
+              {onlineCount !== null && <span className="online-count"> · 🟢 {onlineCount} {t('home.online')}</span>}
+            </span>
+          </button>
         </div>
         {userId && <FriendsSidebar userId={userId} />}
       </div>
+
+      {showProfile && userId && pseudo && (
+        <ProfileModal userId={userId} pseudo={pseudo} onClose={() => setShowProfile(false)} />
+      )}
 
       <div className="mode-row three">
         <button
