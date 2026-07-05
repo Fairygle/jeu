@@ -48,6 +48,15 @@ export default function App() {
     return () => clearInterval(t);
   }, [session]);
 
+  // Avatar choisi (pour l'affichage à côté du pseudo)
+  useEffect(() => {
+    const uid = session?.user.id;
+    if (!supabase || !uid) return;
+    supabase.from('profiles').select('avatar').eq('id', uid).maybeSingle().then(({ data }) => {
+      if (data?.avatar) setMyAvatar(data.avatar);
+    });
+  }, [session?.user.id, showProfile]);
+
   if (!ready) return null;
 
   const loggedIn = Boolean(session) || guest;
@@ -61,14 +70,6 @@ export default function App() {
 
   const pseudo: string | null =
     (session?.user.user_metadata?.pseudo as string | undefined) ?? session?.user.email?.split('@')[0] ?? null;
-
-  useEffect(() => {
-    const uid = session?.user.id;
-    if (!supabase || !uid) return;
-    supabase.from('profiles').select('avatar').eq('id', uid).maybeSingle().then(({ data }) => {
-      if (data?.avatar) setMyAvatar(data.avatar);
-    });
-  }, [session?.user.id, showProfile]);
   const onlineEnabled = Boolean(session && supabaseConfigured);
 
   async function logout() {
