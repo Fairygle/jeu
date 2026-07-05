@@ -7,6 +7,8 @@ import LocalGame from './screens/LocalGame';
 import OnlineGame from './screens/OnlineGame';
 import { supabase, supabaseConfigured } from './lib/supabase';
 import { useI18n } from './i18n';
+import ProfileModal from './components/ProfileModal';
+import { AvatarIcon } from './components/avatars';
 
 type Screen = 'home' | 'rules' | 'local' | 'online';
 type OnlineMode = 'code' | 'join';
@@ -19,6 +21,8 @@ export default function App() {
   const [onlineMode, setOnlineMode] = useState<OnlineMode>('code');
   const [activeRow, setActiveRow] = useState<any>(null);
   const [ready, setReady] = useState(!supabaseConfigured);
+  const [showProfile, setShowProfile] = useState(false);
+  const [myAvatar, setMyAvatar] = useState<string | null>(null);
 
   useEffect(() => {
     if (!supabase) return;
@@ -57,6 +61,14 @@ export default function App() {
 
   const pseudo: string | null =
     (session?.user.user_metadata?.pseudo as string | undefined) ?? session?.user.email?.split('@')[0] ?? null;
+
+  useEffect(() => {
+    const uid = session?.user.id;
+    if (!supabase || !uid) return;
+    supabase.from('profiles').select('avatar').eq('id', uid).maybeSingle().then(({ data }) => {
+      if (data?.avatar) setMyAvatar(data.avatar);
+    });
+  }, [session?.user.id, showProfile]);
   const onlineEnabled = Boolean(session && supabaseConfigured);
 
   async function logout() {
@@ -83,7 +95,14 @@ export default function App() {
                   EN
                 </button>
               </div>
-              <span className="muted small">{pseudo ?? 'Invité'}</span>
+              <button
+                className="pseudo-button topbar-pseudo"
+                onClick={() => session?.user.id && setShowProfile(true)}
+                disabled={!session?.user.id}
+              >
+                {myAvatar && <AvatarIcon avatar={myAvatar} size={17} />}
+                <span className="brand-sub-text muted small">{pseudo ?? 'Invité'}</span>
+              </button>
             </div>
           </div>
           <HomeScreen
@@ -109,6 +128,9 @@ export default function App() {
             onLogout={logout}
             onlineEnabled={onlineEnabled}
           />
+          {showProfile && session?.user.id && pseudo && (
+            <ProfileModal userId={session.user.id} pseudo={pseudo} onClose={() => setShowProfile(false)} />
+          )}
         </>
       )}
       {screen === 'rules' && <RulesScreen onBack={() => setScreen('home')} />}

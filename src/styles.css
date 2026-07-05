@@ -2072,6 +2072,7 @@ button { user-select: none; }
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
 }
+.avatar-svg { fill: #16120c; display: block; }
 .avatar-opt {
   aspect-ratio: 1;
   display: flex;
@@ -2085,6 +2086,4 @@ button { user-select: none; }
   background: #16120c;
   box-shadow: 2px 2px 0 rgba(163,35,29,.7);
 }
-.avatar-opt.selected svg g { stroke: #f2efe6; }
-.avatar-opt.selected svg path[fill="#16120c"] { fill: #f2efe6; }
-.avatar-opt.selected svg circle[fill="#16120c"] { fill: #f2efe6; }
+.avatar-opt.selected .avatar-svg { fill: #f2efe6; }
