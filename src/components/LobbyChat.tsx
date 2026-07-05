@@ -29,16 +29,24 @@ export default function LobbyChat({ userId, pseudo }: Props) {
     if (!supabase) return;
     const sb = supabase;
 
+    // Filet de sécurité : purge les messages de plus de 24h à chaque ouverture
+    // du salon (utile si la tâche planifiée pg_cron n'est pas activée côté serveur).
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     sb.from('lobby_messages')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(30)
-      .then(({ data, error }) => {
-        if (error) {
-          setReady(false);
-          return;
-        }
-        setMessages((data ?? []).slice().reverse());
+      .delete()
+      .lt('created_at', cutoff)
+      .then(() => {
+        sb.from('lobby_messages')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(30)
+          .then(({ data, error }) => {
+            if (error) {
+              setReady(false);
+              return;
+            }
+            setMessages((data ?? []).slice().reverse());
+          });
       });
 
     const channel = sb
