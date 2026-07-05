@@ -7,6 +7,7 @@ import { useGameEvents } from './useGameEvents';
 import { useI18n } from '../i18n';
 import { renderLog } from '../logI18n';
 import { useTokenAnim } from './useTokenAnim';
+import { ALL_PASSAGES } from './passages';
 
 interface Props {
   state: GameState;
@@ -89,6 +90,49 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
   // --- Animation des déplacements : mesure réelle des pièces + jetons flottants ---
   const boardWrapRef = useRef<HTMLDivElement>(null);
   const roomRefs = useRef<Map<RoomId, HTMLElement>>(new Map());
+  const [doorMarks, setDoorMarks] = useState<{ x: number; y: number; vertical: boolean }[]>([]);
+
+  // Positionne les petites portes sur les cloisons entre pièces adjacentes
+  useEffect(() => {
+    function place() {
+      const wrap = boardWrapRef.current;
+      if (!wrap) return;
+      const wr = wrap.getBoundingClientRect();
+      const marks: { x: number; y: number; vertical: boolean }[] = [];
+      for (const p of ALL_PASSAGES) {
+        if (p.kind !== 'door') continue; // les escaliers sont déjà dessinés
+        const ea = roomRefs.current.get(p.a);
+        const eb = roomRefs.current.get(p.b);
+        if (!ea || !eb) continue;
+        const ra = ea.getBoundingClientRect();
+        const rb = eb.getBoundingClientRect();
+        const aL = ra.left - wr.left, aR = ra.right - wr.left, aT = ra.top - wr.top, aB = ra.bottom - wr.top;
+        const bL = rb.left - wr.left, bR = rb.right - wr.left, bT = rb.top - wr.top, bB = rb.bottom - wr.top;
+        const ovX = Math.min(aR, bR) - Math.max(aL, bL);
+        const ovY = Math.min(aB, bB) - Math.max(aT, bT);
+        if (ovX > ovY && ovX > 0) {
+          // cloison horizontale -> porte couchée, passage vertical
+          const x = (Math.max(aL, bL) + Math.min(aR, bR)) / 2;
+          const y = aB < bT ? (aB + bT) / 2 : (bB + aT) / 2;
+          marks.push({ x, y, vertical: false });
+        } else if (ovY > 0) {
+          // cloison verticale -> porte debout, passage horizontal
+          const y = (Math.max(aT, bT) + Math.min(aB, bB)) / 2;
+          const x = aR < bL ? (aR + bL) / 2 : (bR + aL) / 2;
+          marks.push({ x, y, vertical: true });
+        }
+      }
+      setDoorMarks(marks);
+    }
+    place();
+    window.addEventListener('resize', place);
+    const t = window.setTimeout(place, 300); // après stabilisation du layout
+    return () => {
+      window.removeEventListener('resize', place);
+      clearTimeout(t);
+    };
+  }, [isSetup, state.phase]);
+
   const [puffs, setPuffs] = useState<{ id: number; x: number; y: number }[]>([]);
   const puffId = useRef(0);
   function addPuff(x: number, y: number) {
@@ -378,6 +422,22 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
           {renderRoom('n2', 2)}
           <div className="floor-label" style={{ gridArea: 'lbl0' }}>{t('game.floor.basement')}</div>
           {renderRoom('n8', 8)}
+        </div>
+
+        {/* Petites portes sur les cloisons entre pièces adjacentes */}
+        <div className="door-layer" aria-hidden="true">
+          {doorMarks.map((d, i) => (
+            <span
+              key={i}
+              className={`door-mark ${d.vertical ? 'vert' : 'horiz'}`}
+              style={{ left: d.x, top: d.y }}
+            >
+              <svg viewBox="0 0 12 16" width="11" height="15">
+                <rect x="1.5" y="1" width="9" height="14" rx="1" />
+                <circle cx="8.4" cy="8" r="1" className="knob" />
+              </svg>
+            </span>
+          ))}
         </div>
 
         {/* Calque des jetons flottants — glissement animé, mesuré en pixels réels */}

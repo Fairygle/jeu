@@ -2088,3 +2088,27 @@ button { user-select: none; }
   box-shadow: 2px 2px 0 rgba(163,35,29,.7);
 }
 .avatar-opt.selected .avatar-svg { fill: #f2efe6; }
+
+/* ==========================================================================
+   Petites portes sur les cloisons entre pièces adjacentes
+   ========================================================================== */
+.door-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+.door-mark {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: block;
+  line-height: 0;
+}
+.door-mark svg {
+  fill: #efe8d6;
+  stroke: #16120c;
+  stroke-width: 1.4;
+  filter: drop-shadow(1px 1px 0 rgba(0, 0, 0, 0.4));
+}
+.door-mark .knob { fill: #16120c; stroke: none; }
+.door-mark.horiz { transform: translate(-50%, -50%) rotate(90deg); }

@@ -1,6 +1,7 @@
 import { RefObject, useLayoutEffect, useRef, useState } from 'react';
 import { ADJACENCY, RoomId } from '../game/board';
 
+
 export interface TokenStyle {
   left: number;
   top: number;
@@ -34,45 +35,26 @@ function pickIntermediate(from: RoomId, to: RoomId): RoomId | null {
 }
 
 /**
- * Construit un trajet orthogonal (en L) entre deux pièces, passant par
- * l'interstice qui les sépare, plutôt qu'une diagonale centre-à-centre.
- * Renvoie la liste des points intermédiaires (hors centre de départ).
+ * Point de passage (porte ou escalier) entre deux pièces : le centre de
+ * l'interstice mitoyen. Le trajet du jeton passe par ce point, ce qui donne
+ * un cheminement en L par la cloison plutôt qu'une diagonale.
  */
-function pathBetween(a: Rect, b: Rect): Pt[] {
-  const GAP = 4; // marge dans l'interstice
-  // Chevauchement horizontal et vertical des deux pièces
+function gatePoint(a: Rect, b: Rect): Pt {
   const ovX = Math.min(a.right, b.right) - Math.max(a.left, b.left);
   const ovY = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
-
-  // Cas 1 : les pièces se chevauchent horizontalement -> passage vertical (haut/bas)
   if (ovX > ovY && ovX > 0) {
-    const midX = Math.max(Math.max(a.left, b.left), Math.min(Math.min(a.right, b.right), (a.cx + b.cx) / 2));
-    // interstice vertical entre les deux
-    const corridorY = a.cy < b.cy ? (a.bottom + b.top) / 2 : (a.top + b.bottom) / 2;
-    return [
-      { x: midX, y: corridorY }, // sort vers le couloir
-      { x: b.cx, y: corridorY }, // longe jusqu'à l'axe de la destination
-      { x: b.cx, y: b.cy }, // entre
-    ];
+    // cloison horizontale -> passage vertical entre les deux
+    const x = (Math.max(a.left, b.left) + Math.min(a.right, b.right)) / 2;
+    const y = a.cy < b.cy ? (a.bottom + b.top) / 2 : (a.top + b.bottom) / 2;
+    return { x, y };
   }
-
-  // Cas 2 : chevauchement vertical -> passage horizontal (gauche/droite)
   if (ovY > 0) {
-    const midY = Math.max(Math.max(a.top, b.top), Math.min(Math.min(a.bottom, b.bottom), (a.cy + b.cy) / 2));
-    const corridorX = a.cx < b.cx ? (a.right + b.left) / 2 : (a.left + b.right) / 2;
-    return [
-      { x: corridorX, y: midY },
-      { x: corridorX, y: b.cy },
-      { x: b.cx, y: b.cy },
-    ];
+    const y = (Math.max(a.top, b.top) + Math.min(a.bottom, b.bottom)) / 2;
+    const x = a.cx < b.cx ? (a.right + b.left) / 2 : (a.left + b.right) / 2;
+    return { x, y };
   }
-
-  // Cas 3 : pièces en diagonale (pas de chevauchement) -> L par le coin
-  void GAP;
-  return [
-    { x: a.cx, y: b.cy }, // descend/monte d'abord dans l'axe vertical
-    { x: b.cx, y: b.cy }, // puis rejoint horizontalement
-  ];
+  // pièces en diagonale : coin en L
+  return { x: a.cx, y: b.cy };
 }
 
 const STEP_MS = 150; // durée par segment élémentaire du trajet
@@ -139,6 +121,7 @@ export function useTokenAnim(
         const e = roomRefs.current?.get(r);
         return e ? rectOf(wrap, e) : null;
       });
+      const waypoints: Pt[] = [];
       if (rects.some((r) => !r)) {
         // fallback direct si une mesure manque
         setStyle({ left: destRect.cx, top: destRect.cy, opacity: 1, transition: `left 450ms ${EASE}, top 450ms ${EASE}` });
@@ -148,14 +131,17 @@ export function useTokenAnim(
         const rawWaypoints: Pt[] = [];
         const rawStops: boolean[] = [];
         for (let i = 0; i < rects.length - 1; i++) {
-          const seg = pathBetween(rects[i]!, rects[i + 1]!);
-          seg.forEach((p, j) => {
-            rawWaypoints.push(p);
-            rawStops.push(j === seg.length - 1);
-          });
+          const ra = rects[i]!;
+          const rb = rects[i + 1]!;
+          // Point de passage exact (centre de la porte / de l'escalier)
+          const gate = gatePoint(ra, rb);
+          rawWaypoints.push(gate);
+          rawStops.push(false);
+          // puis entrée au centre de la pièce suivante
+          rawWaypoints.push({ x: rb.cx, y: rb.cy });
+          rawStops.push(true);
         }
         // Retire les points quasi identiques consécutifs (évite les temps morts)
-        const waypoints: Pt[] = [];
         const stopFlags: boolean[] = [];
         for (let i = 0; i < rawWaypoints.length; i++) {
           const prev = waypoints[waypoints.length - 1];
