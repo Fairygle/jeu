@@ -5,6 +5,7 @@ import { ActionIcon, Hearts } from './icons';
 import { ROOM_DECOR } from './decor';
 import { useGameEvents } from './useGameEvents';
 import { useI18n } from '../i18n';
+import { renderLog } from '../logI18n';
 
 interface Props {
   state: GameState;
@@ -33,11 +34,6 @@ const EFFECT_INFO: Partial<Record<RoomId, { icon: string; label: string }>> = {
 };
 
 export default function GameView({ state, viewer, canAct, onAction, playerNames, error, deadline }: Props) {
-  /** Journal façon partie parlée : les pseudos remplacent "Joueur 1/2". */
-  const named = (text: string) =>
-    text
-      .replace(/[Ll]e joueur ([12])/g, (_, d) => playerNames[Number(d) - 1])
-      .replace(/[Jj]oueur ([12])/g, (_, d) => playerNames[Number(d) - 1]);
   const { t } = useI18n();
   const [wheelRoom, setWheelRoom] = useState<RoomId | null>(null);
   const [wheelAnchor, setWheelAnchor] = useState<{ x: number; y: number; side: 'left' | 'right' } | null>(null);
@@ -53,7 +49,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
 
   const secondsLeft = deadline ? Math.max(0, Math.ceil((deadline - now) / 1000)) : null;
 
-  const gameEvent = useGameEvents(state, viewer);
+  const gameEvent = useGameEvents(state, viewer, t, playerNames);
 
   const me = state.players[viewer];
   const foe = state.players[viewer === 0 ? 1 : 0];
@@ -245,7 +241,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
               <ActionIcon k={gameEvent.icon} size={gameEvent.weight === 'major' ? 26 : 20} />
             </span>
           )}
-          <span className="event-text">{named(gameEvent.text)}</span>
+          <span className="event-text">{gameEvent.text}</span>
         </div>
       )}
       {/* Ligne de statut unique */}
@@ -372,27 +368,27 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
         <div className="wheel-overlay" onClick={() => setShowRules(false)}>
           <div className="log-modal rules-modal" onClick={(e) => e.stopPropagation()}>
             <div className="log-modal-header">
-              <span>Règles</span>
+              <span>{t('home.rules')}</span>
               <button className="wheel-close-inline" onClick={() => setShowRules(false)}>✕</button>
             </div>
             <div className="rules-quick">
-              <p><strong>But :</strong> réduire l'adversaire à 0 ♥ (chacun en a 2).</p>
-              <p><strong>Tour :</strong> 2 ⚡ (3 si vous commencez dans la Cuisine). Touchez une pièce pour agir.</p>
-              <div className="rules-quick-section">Actions</div>
-              <p><ActionIcon k="footprint" size={14} /> <strong>Aller</strong> (1⚡) — pièce voisine, vous redevenez caché.</p>
-              <p><ActionIcon k="footsteps" size={14} /> <strong>Sprint</strong> (2⚡) — jusqu'à 2 pièces.</p>
-              <p><ActionIcon k="revolver" size={14} /> <strong>Tirer</strong> (2⚡) — votre pièce ou en ligne de vue. Vous êtes révélé, puis repli gratuit.</p>
-              <p><ActionIcon k="ear" size={14} /> <strong>Écouter</strong> (1⚡) — l'adversaire désigne une pièce voisine de la sienne.</p>
-              <p><ActionIcon k="dynamite" size={14} /> <strong>Piège</strong> (1⚡, max 2) — posé dans votre pièce, invisible pour l'autre.</p>
-              <p><ActionIcon k="detonator" size={14} /> <strong>Déclencher</strong> (1⚡) — active votre piège : −1♥ si l'adversaire y est.</p>
-              <div className="rules-quick-section">Effets des pièces</div>
-              <p><ActionIcon k="antenna" size={14} /> <strong>Foyer</strong> (gratuit) — révèle l'adversaire s'il est à l'étage, sinon il indique une pièce voisine.</p>
-              <p><ActionIcon k="pot" size={14} /> <strong>Cuisine</strong> (gratuit) — si vous y commencez votre tour, activez le ravitaillement : +1⚡ (vous êtes révélé).</p>
-              <p><ActionIcon k="hatch" size={14} /> <strong>Bibliothèque</strong> (1⚡) — un adversaire en Cuisine chute au Sous-sol.</p>
-              <p><ActionIcon k="wave" size={14} /> <strong>Chambre</strong> (1⚡) — inonde le Sous-sol : −1♥ à qui s'y trouve, accès bloqué un tour.</p>
-              <p><ActionIcon k="jump" size={14} /> <strong>Balcon</strong> (gratuit) — saut vers la Cuisine, vous êtes révélé.</p>
-              <p><ActionIcon k="timedynamite" size={14} /> <strong>{t('game.floor.basement')}</strong> (1⚡) — piège retardé n'importe où, se déclenche à votre prochain tour.</p>
-              <p className="muted small">Activer un effet vous révèle jusqu'à votre prochain déplacement. 60 s par tour, 2 tours inactifs = forfait. Icônes : game-icons.net (CC BY).</p>
+              <p><strong>{t('rules.goalLabel')} :</strong> {t('rules.goal')}</p>
+              <p><strong>{t('rules.turnLabel')} :</strong> {t('rules.turn')}</p>
+              <div className="rules-quick-section">{t('rules.actionsHeader')}</div>
+              <p><ActionIcon k="footprint" size={14} /> <strong>{t('act.move')}</strong> {t('rules.act.move')}</p>
+              <p><ActionIcon k="footsteps" size={14} /> <strong>{t('act.sprint')}</strong> {t('rules.act.sprint')}</p>
+              <p><ActionIcon k="revolver" size={14} /> <strong>{t('act.shoot')}</strong> {t('rules.act.shoot')}</p>
+              <p><ActionIcon k="ear" size={14} /> <strong>{t('act.listen')}</strong> {t('rules.act.listen')}</p>
+              <p><ActionIcon k="dynamite" size={14} /> <strong>{t('act.trap')}</strong> {t('rules.act.trap')}</p>
+              <p><ActionIcon k="detonator" size={14} /> <strong>{t('act.trigger')}</strong> {t('rules.act.trigger')}</p>
+              <div className="rules-quick-section">{t('rules.roomsHeader')}</div>
+              <p><ActionIcon k="antenna" size={14} /> <strong>{t('room.1')}</strong> {t('rules.room.foyer')}</p>
+              <p><ActionIcon k="pot" size={14} /> <strong>{t('room.4')}</strong> {t('rules.room.kitchen')}</p>
+              <p><ActionIcon k="hatch" size={14} /> <strong>{t('room.5')}</strong> {t('rules.room.library')}</p>
+              <p><ActionIcon k="wave" size={14} /> <strong>{t('room.6')}</strong> {t('rules.room.bedroom')}</p>
+              <p><ActionIcon k="jump" size={14} /> <strong>{t('room.7')}</strong> {t('rules.room.balcony')}</p>
+              <p><ActionIcon k="timedynamite" size={14} /> <strong>{t('room.8')}</strong> {t('rules.room.basement')}</p>
+              <p className="muted small">{t('rules.footer')}</p>
             </div>
           </div>
         </div>
@@ -402,12 +398,12 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
         <div className="wheel-overlay" onClick={() => setShowLog(false)}>
           <div className="log-modal" onClick={(e) => e.stopPropagation()}>
             <div className="log-modal-header">
-              <span>Journal</span>
+              <span>{t('game.journal')}</span>
               <button className="wheel-close-inline" onClick={() => setShowLog(false)}>✕</button>
             </div>
             <div className="log">
               {[...visibleLog].reverse().map((e, i) => (
-                <div key={i} className={`log-entry ${e.kind ?? ''}`}>{e.text}</div>
+                <div key={i} className={`log-entry ${e.kind ?? ''}`}>{renderLog(e, t, playerNames)}</div>
               ))}
             </div>
           </div>

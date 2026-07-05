@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useI18n } from '../i18n';
 import { UiIcon } from './icons';
 
 export interface ChatMessage {
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function ChatBox({ messages, myId, onSend, opponentName, opponentOnline }: Props) {
+  const { t } = useI18n();
   const [text, setText] = useState('');
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -39,7 +41,7 @@ export default function ChatBox({ messages, myId, onSend, opponentName, opponent
       <div className="chat-bar-status">
         <span className={`presence-dot ${opponentOnline ? 'on' : 'off'}`} />
         <span className="chat-bar-name">{opponentName}</span>
-        <span className="chat-bar-state">{opponentOnline ? 'en ligne' : 'hors ligne'}</span>
+        <span className="chat-bar-state">{opponentOnline ? t('mp.online') : t('mp.offline')}</span>
       </div>
       <div className="chat-bar-messages" ref={scrollRef}>
         {recent.length === 0 && <div className="chat-empty">Écrivez un message à votre adversaire…</div>}
@@ -56,7 +58,7 @@ export default function ChatBox({ messages, myId, onSend, opponentName, opponent
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && submit()}
           onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }), 250)}
-          placeholder="Message…"
+          placeholder={t('chat.message')}
           maxLength={300}
         />
         <button className="chat-send" onClick={submit} disabled={!text.trim()} aria-label="Envoyer"><UiIcon k="send" size={18} /></button>

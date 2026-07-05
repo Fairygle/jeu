@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { GameState, LogEntry, PlayerIndex } from '../game/engine';
+import { renderLog } from '../logI18n';
 
 /* ── Classification d'un événement de log en animation ────────────────────
    minor = doux et rapide (~1100 ms) ; major = plus fort et dramatique (~1700 ms). */
@@ -10,77 +11,94 @@ export interface GameEvent {
   text: string;
   weight: 'minor' | 'major';
   tone: Tone;
-  icon: string; // clé ActionIcon ou '' 
+  icon: string;
 }
 
-function classify(e: LogEntry, viewer: PlayerIndex): Omit<GameEvent, 'id'> | null {
-  const t = e.text.toLowerCase();
-  const mine = e.actor === viewer;
+type Tfn = (key: string, params?: Record<string, string | number>) => string;
 
-  // — Dégâts : majeur, dramatique —
-  if (e.kind === 'damage' || /perd 1 pv|touché|inflige|dégât/.test(t)) {
-    return { text: e.text, weight: 'major', tone: 'danger', icon: 'revolver' };
-  }
-  // — Tir manqué —
-  if (/manque|raté|à côté|aucune cible/.test(t)) {
-    return { text: e.text, weight: 'minor', tone: 'neutral', icon: 'revolver' };
-  }
-  // — Tir (sans dégât explicite) —
-  if (/tire|fait feu|coup de feu/.test(t)) {
-    return { text: e.text, weight: 'major', tone: 'danger', icon: 'revolver' };
-  }
-  // — Révélation —
-  if (e.kind === 'reveal' || /révél|repéré|position exacte|se ravitaille|saute|bond/.test(t)) {
-    return { text: e.text, weight: 'major', tone: 'reveal', icon: 'antenna' };
-  }
-  // — Piège posé —
-  if (/pose un piège|piège posé|dispositif/.test(t)) {
-    return { text: e.text, weight: 'minor', tone: 'neutral', icon: 'dynamite' };
-  }
-  // — Piège déclenché —
-  if (/piège se déclenche|déclenche|piège.*explos/.test(t)) {
-    return { text: e.text, weight: 'major', tone: 'danger', icon: 'detonator' };
-  }
-  // — Effets de pièce spéciaux —
-  if (/inonde|inondation|trappe|poussé|chute|échos/.test(t)) {
-    return { text: e.text, weight: 'major', tone: 'reveal', icon: 'wave' };
-  }
-  // — Écoute —
-  if (/écoute|entend|indique une pièce/.test(t)) {
-    return { text: e.text, weight: 'minor', tone: 'neutral', icon: 'ear' };
-  }
-  // — Déplacement —
-  if (/se déplace|disparaît dans l'ombre|repli|avance/.test(t)) {
-    return { text: e.text, weight: 'minor', tone: mine ? 'good' : 'neutral', icon: 'footprint' };
-  }
-  // — Début de tour —
-  if (/^tour \d+/.test(t)) {
-    return { text: e.text.replace(/\s*:.*/, ''), weight: 'minor', tone: 'neutral', icon: 'footprint' };
-  }
-  // — Fin / début de tour —
-  if (/fin de tour|n'a plus d'action/.test(t)) {
-    return { text: e.text, weight: 'minor', tone: 'neutral', icon: '' };
-  }
-  return null;
+const MINOR_KEYS = new Set([
+  'log.trapMine',
+  'log.trapOpp',
+  'log.listen',
+  'log.moveMine',
+  'log.moveFreeMine',
+  'log.moveOpp',
+  'log.doubleMoveMine',
+  'log.doubleMoveOpp',
+  'log.escapeMine',
+  'log.escapeOpp',
+  'log.endTurnManual',
+  'log.turnStart',
+]);
+
+const DANGER_KEYS = new Set(['log.damage', 'log.shoot', 'log.trapTrigger']);
+const REVEAL_KEYS = new Set([
+  'log.echoTrigger',
+  'log.echoRevealExact',
+  'log.echoAnswer',
+  'log.listenAnswer',
+  'log.hatchTrigger',
+  'log.hatchPush',
+  'log.floodLever',
+  'log.balconyJump',
+  'log.kitchenRefill',
+  'log.basementDeviceOpp',
+  'log.delayedTrigger',
+]);
+
+const ICONS: Record<string, string> = {
+  'log.trapMine': 'dynamite',
+  'log.trapOpp': 'dynamite',
+  'log.trapTrigger': 'detonator',
+  'log.delayedTrigger': 'timedynamite',
+  'log.listen': 'ear',
+  'log.listenAnswer': 'ear',
+  'log.echoAnswer': 'antenna',
+  'log.echoTrigger': 'antenna',
+  'log.echoRevealExact': 'antenna',
+  'log.moveMine': 'footprint',
+  'log.moveFreeMine': 'runner',
+  'log.moveOpp': 'footprint',
+  'log.doubleMoveMine': 'footsteps',
+  'log.doubleMoveOpp': 'footsteps',
+  'log.escapeMine': 'footprint',
+  'log.escapeOpp': 'footprint',
+  'log.shoot': 'revolver',
+  'log.shootMiss': 'revolver',
+  'log.damage': 'revolver',
+  'log.hatchTrigger': 'hatch',
+  'log.hatchPush': 'hatch',
+  'log.floodLever': 'wave',
+  'log.balconyJump': 'jump',
+  'log.kitchenRefill': 'pot',
+  'log.basementDeviceOpp': 'timedynamite',
+};
+
+function classify(e: LogEntry): Omit<GameEvent, 'id' | 'text'> | null {
+  if (!e.key) return null;
+  if (e.key === 'log.setupStart' || e.key === 'log.kitchenAvailable' || e.key === 'log.floodRecedes') return null;
+  if (e.key === 'log.playerPositioned') return null; // discret, pas d'animation
+  const weight: 'minor' | 'major' = MINOR_KEYS.has(e.key) ? 'minor' : 'major';
+  const tone: Tone = DANGER_KEYS.has(e.key) ? 'danger' : REVEAL_KEYS.has(e.key) ? 'reveal' : 'neutral';
+  return { weight, tone, icon: ICONS[e.key] ?? '' };
 }
 
-/* File d'attente : un événement à la fois, jamais de chevauchement. */
-export function useGameEvents(state: GameState, viewer: PlayerIndex) {
+/** File d'attente : un événement à la fois, jamais de chevauchement. */
+export function useGameEvents(state: GameState, viewer: PlayerIndex, t: Tfn, playerNames: [string, string]) {
   const [current, setCurrent] = useState<GameEvent | null>(null);
   const queue = useRef<GameEvent[]>([]);
-  const seen = useRef<number>(0); // nb d'entrées de log déjà traitées
+  const seen = useRef<number>(0);
   const idRef = useRef(0);
   const busy = useRef(false);
 
-  // Détecte les nouvelles entrées de log visibles et les met en file
   useEffect(() => {
     const log = state.log;
     if (log.length < seen.current) seen.current = 0; // nouvelle partie
     for (let i = seen.current; i < log.length; i++) {
       const e = log[i];
       if (e.visibility !== 'both' && e.visibility !== viewer) continue;
-      const c = classify(e, viewer);
-      if (c) queue.current.push({ ...c, id: ++idRef.current });
+      const c = classify(e);
+      if (c) queue.current.push({ ...c, text: renderLog(e, t, playerNames), id: ++idRef.current });
     }
     seen.current = log.length;
     pump();
@@ -96,7 +114,6 @@ export function useGameEvents(state: GameState, viewer: PlayerIndex) {
     const dur = next.weight === 'major' ? 1700 : 1100;
     window.setTimeout(() => {
       setCurrent(null);
-      // petite respiration entre deux bannières
       window.setTimeout(() => {
         busy.current = false;
         pump();

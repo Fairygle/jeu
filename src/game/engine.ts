@@ -31,9 +31,12 @@ export type Visibility = 'both' | 0 | 1;
 export interface LogEntry {
   turn: number;
   actor: PlayerIndex | null;
-  text: string;
+  text: string; // texte français de repli (compat / debug)
   visibility: Visibility;
   kind?: 'info' | 'damage' | 'reveal' | 'system';
+  /** Clé et paramètres pour la traduction i18n à l'affichage (voir src/logI18n.ts). */
+  key?: string;
+  params?: Record<string, any>;
 }
 
 export type Pending =
@@ -97,6 +100,7 @@ export function newGame(): GameState {
         text: 'La partie commence. Chaque joueur choisit sa pièce de départ en secret.',
         visibility: 'both',
         kind: 'system',
+        key: 'log.setupStart',
       },
     ],
   };
@@ -128,18 +132,35 @@ function checkWin(s: GameState) {
         text: `Le joueur ${other(i) + 1} remporte la partie !`,
         visibility: 'both',
         kind: 'system',
+        key: 'log.winner',
+        params: { player: other(i) },
       });
     }
   }
 }
 
-function damage(s: GameState, victim: PlayerIndex, amount: number, reason: string) {
+type DamageReasonKey = 'shot' | 'trap' | 'delayedTrap' | 'floodedFall' | 'risingWater';
+
+function reasonTextFr(key: DamageReasonKey, room?: RoomId): string {
+  switch (key) {
+    case 'trap': return `piège en ${roomName(room!)}`;
+    case 'delayedTrap': return `piège retardé en ${roomName(room!)}`;
+    case 'floodedFall': return 'chute dans le Sous-sol inondé';
+    case 'risingWater': return 'montée des eaux';
+    default: return 'tir';
+  }
+}
+
+function damage(s: GameState, victim: PlayerIndex, amount: number, reasonKey: DamageReasonKey, reasonRoom?: RoomId) {
   s.players[victim].hp -= amount;
+  const hp = Math.max(0, s.players[victim].hp);
   pushLog(s, {
     actor: null,
-    text: `Le joueur ${victim + 1} perd ${amount} PV (${reason}). PV restants : ${Math.max(0, s.players[victim].hp)}.`,
+    text: `Le joueur ${victim + 1} perd ${amount} PV (${reasonTextFr(reasonKey, reasonRoom)}). PV restants : ${hp}.`,
     visibility: 'both',
     kind: 'damage',
+    key: 'log.damage',
+    params: { player: victim, amount, reasonKey, reasonRoom, hp },
   });
   checkWin(s);
 }
@@ -158,6 +179,7 @@ function startTurn(s: GameState) {
       text: 'Les eaux du Sous-sol se retirent.',
       visibility: 'both',
       kind: 'system',
+      key: 'log.floodRecedes',
     });
   }
 
@@ -169,6 +191,8 @@ function startTurn(s: GameState) {
     text: `Tour ${s.turnNumber} — Joueur ${i + 1} : 2 PA.`,
     visibility: 'both',
     kind: 'system',
+    key: 'log.turnStart',
+    params: { player: i, turn: s.turnNumber },
   });
   if (p.kitchenBonus) {
     pushLog(s, {
@@ -176,6 +200,7 @@ function startTurn(s: GameState) {
       text: 'Ravitaillement disponible en Cuisine (à activer, gratuit).',
       visibility: i,
       kind: 'info',
+      key: 'log.kitchenAvailable',
     });
   }
 
@@ -188,9 +213,11 @@ function startTurn(s: GameState) {
         text: `Un dispositif retardé se déclenche : ${roomName(room)}.`,
         visibility: 'both',
         kind: 'info',
+        key: 'log.delayedTrigger',
+        params: { room },
       });
       if (s.players[opp].room === room) {
-        damage(s, opp, 1, `piège retardé en ${roomName(room)}`);
+        damage(s, opp, 1, 'delayedTrap', room);
       }
     }
     p.delayedTraps = [];
@@ -226,6 +253,8 @@ function endTurnInternal(s: GameState, auto: boolean) {
       : `Le joueur ${i + 1} termine son tour.`,
     visibility: 'both',
     kind: 'system',
+    key: auto ? 'log.endTurnAuto' : 'log.endTurnManual',
+    params: { player: i },
   });
   s.active = other(i);
   startTurn(s);
@@ -315,12 +344,16 @@ export function applyAction(prev: GameState, actor: PlayerIndex, action: GameAct
       text: `Vous vous cachez : ${roomName(action.room)}.`,
       visibility: actor,
       kind: 'info',
+      key: 'log.youHide',
+      params: { room: action.room },
     });
     pushLog(s, {
       actor,
       text: `Le joueur ${actor + 1} a pris position.`,
       visibility: other(actor) as Visibility,
       kind: 'info',
+      key: 'log.playerPositioned',
+      params: { player: actor },
     });
     if (actor === 0) {
       s.setupTurn = 1;
@@ -346,6 +379,8 @@ export function applyAction(prev: GameState, actor: PlayerIndex, action: GameAct
         text: `${label} — le joueur ${actor + 1} révèle une pièce adjacente à sa position : ${roomName(action.room)}.`,
         visibility: 'both',
         kind: 'reveal',
+        key: s.pending.source === 'echo' ? 'log.echoAnswer' : 'log.listenAnswer',
+        params: { player: actor, room: action.room },
       });
       s.pending = null;
       maybeAutoEnd(s);
@@ -360,12 +395,16 @@ export function applyAction(prev: GameState, actor: PlayerIndex, action: GameAct
         text: `Vous fuyez vers : ${roomName(action.room)}.`,
         visibility: actor,
         kind: 'info',
+        key: 'log.escapeMine',
+        params: { room: action.room },
       });
       pushLog(s, {
         actor,
         text: `Le joueur ${actor + 1} s'échappe du Sous-sol.`,
         visibility: other(actor) as Visibility,
         kind: 'info',
+        key: 'log.escapeOpp',
+        params: { player: actor },
       });
       s.pending = null;
       maybeAutoEnd(s);
@@ -394,12 +433,16 @@ export function applyAction(prev: GameState, actor: PlayerIndex, action: GameAct
         text: free ? `Repli gratuit vers : ${roomName(action.room)}.` : `Déplacement vers : ${roomName(action.room)}.`,
         visibility: actor,
         kind: 'info',
+        key: free ? 'log.moveFreeMine' : 'log.moveMine',
+        params: { room: action.room },
       });
       pushLog(s, {
         actor,
         text: `Le joueur ${actor + 1} se déplace et disparaît dans l'ombre.`,
         visibility: other(actor) as Visibility,
         kind: 'info',
+        key: 'log.moveOpp',
+        params: { player: actor },
       });
       break;
     }
@@ -418,12 +461,16 @@ export function applyAction(prev: GameState, actor: PlayerIndex, action: GameAct
         text: `Double déplacement vers : ${roomName(action.room)}.`,
         visibility: actor,
         kind: 'info',
+        key: 'log.doubleMoveMine',
+        params: { room: action.room },
       });
       pushLog(s, {
         actor,
         text: `Le joueur ${actor + 1} se déplace rapidement.`,
         visibility: other(actor) as Visibility,
         kind: 'info',
+        key: 'log.doubleMoveOpp',
+        params: { player: actor },
       });
       break;
     }
@@ -440,11 +487,13 @@ export function applyAction(prev: GameState, actor: PlayerIndex, action: GameAct
         text: `Le joueur ${actor + 1} tire depuis ${roomName(p.room)} sur ${roomName(action.room)} !`,
         visibility: 'both',
         kind: 'reveal',
+        key: 'log.shoot',
+        params: { player: actor, room: p.room, room2: action.room },
       });
       if (opp.room === action.room) {
-        damage(s, other(actor), 1, 'tir');
+        damage(s, other(actor), 1, 'shot');
       } else {
-        pushLog(s, { actor, text: 'Le coup ne touche personne.', visibility: 'both', kind: 'info' });
+        pushLog(s, { actor, text: 'Le coup ne touche personne.', visibility: 'both', kind: 'info', key: 'log.shootMiss' });
       }
       if (s.phase === 'playing') p.freeMoveAvailable = true; // repli gratuit (§2, §4.3)
       break;
@@ -459,6 +508,8 @@ export function applyAction(prev: GameState, actor: PlayerIndex, action: GameAct
         text: `Le joueur ${actor + 1} tend l'oreille…`,
         visibility: 'both',
         kind: 'info',
+        key: 'log.listen',
+        params: { player: actor },
       });
       s.pending = { kind: 'listen', responder: other(actor), source: 'listen' };
       return s; // pas d'auto-end tant que l'interruption est en cours
@@ -476,12 +527,16 @@ export function applyAction(prev: GameState, actor: PlayerIndex, action: GameAct
         text: `Piège posé : ${roomName(p.room)}.`,
         visibility: actor,
         kind: 'info',
+        key: 'log.trapMine',
+        params: { room: p.room },
       });
       pushLog(s, {
         actor,
         text: `Le joueur ${actor + 1} pose un piège…`,
         visibility: other(actor) as Visibility,
         kind: 'info',
+        key: 'log.trapOpp',
+        params: { player: actor },
       });
       break;
     }
@@ -498,9 +553,11 @@ export function applyAction(prev: GameState, actor: PlayerIndex, action: GameAct
         text: `Un piège claque : ${roomName(action.room)} !`,
         visibility: 'both',
         kind: 'info',
+        key: 'log.trapTrigger',
+        params: { room: action.room },
       });
       if (opp.room === action.room) {
-        damage(s, other(actor), 1, `piège en ${roomName(action.room)}`);
+        damage(s, other(actor), 1, 'trap', action.room);
       }
       break;
     }
@@ -523,6 +580,8 @@ export function applyAction(prev: GameState, actor: PlayerIndex, action: GameAct
             text: `Le joueur ${actor + 1} se ravitaille en Cuisine : 3 PA ce tour.`,
             visibility: 'both',
             kind: 'reveal',
+            key: 'log.kitchenRefill',
+            params: { player: actor },
           });
           break;
         }
@@ -534,6 +593,8 @@ export function applyAction(prev: GameState, actor: PlayerIndex, action: GameAct
             text: `Le joueur ${actor + 1} déclenche les échos du Foyer.`,
             visibility: 'both',
             kind: 'reveal',
+            key: 'log.echoTrigger',
+            params: { player: actor },
           });
           if (opp.room && UPPER_FLOOR.includes(opp.room)) {
             opp.revealedUntilMove = true;
@@ -542,6 +603,8 @@ export function applyAction(prev: GameState, actor: PlayerIndex, action: GameAct
               text: `Les échos trahissent le joueur ${other(actor) + 1} : ${roomName(opp.room)} !`,
               visibility: 'both',
               kind: 'reveal',
+              key: 'log.echoRevealExact',
+              params: { player: other(actor), room: opp.room },
             });
           } else {
             s.pending = { kind: 'listen', responder: other(actor), source: 'echo' };
@@ -558,6 +621,8 @@ export function applyAction(prev: GameState, actor: PlayerIndex, action: GameAct
             text: `Le joueur ${actor + 1} actionne la trappe de la Bibliothèque.`,
             visibility: 'both',
             kind: 'reveal',
+            key: 'log.hatchTrigger',
+            params: { player: actor },
           });
           if (opp.room === KITCHEN) {
             opp.room = BASEMENT;
@@ -566,16 +631,18 @@ export function applyAction(prev: GameState, actor: PlayerIndex, action: GameAct
               text: `Le joueur ${other(actor) + 1} est précipité de la Cuisine au Sous-sol !`,
               visibility: 'both',
               kind: 'info',
+              key: 'log.hatchPush',
+              params: { player: other(actor) },
             });
             if (s.basementFlood.active) {
-              damage(s, other(actor), 1, 'chute dans le Sous-sol inondé');
+              damage(s, other(actor), 1, 'floodedFall');
               if (s.phase === 'playing') {
                 s.pending = { kind: 'escape', responder: other(actor), options: basementEscapeRooms() };
                 return s;
               }
             }
           } else {
-            pushLog(s, { actor, text: 'La trappe claque dans le vide.', visibility: 'both', kind: 'info' });
+            pushLog(s, { actor, text: 'La trappe claque dans le vide.', visibility: 'both', kind: 'info', key: 'log.hatchMiss' });
           }
           break;
         }
@@ -589,9 +656,11 @@ export function applyAction(prev: GameState, actor: PlayerIndex, action: GameAct
             text: `Le joueur ${actor + 1} actionne le levier : le Sous-sol s'inonde !`,
             visibility: 'both',
             kind: 'reveal',
+            key: 'log.floodLever',
+            params: { player: actor },
           });
           if (opp.room === BASEMENT) {
-            damage(s, other(actor), 1, 'montée des eaux');
+            damage(s, other(actor), 1, 'risingWater');
             if (s.phase === 'playing') {
               s.pending = { kind: 'escape', responder: other(actor), options: basementEscapeRooms() };
               return s;
@@ -608,6 +677,8 @@ export function applyAction(prev: GameState, actor: PlayerIndex, action: GameAct
             text: `Le joueur ${actor + 1} saute du Balcon et atterrit dans la Cuisine !`,
             visibility: 'both',
             kind: 'reveal',
+            key: 'log.balconyJump',
+            params: { player: actor },
           });
           break;
         }
@@ -624,12 +695,16 @@ export function applyAction(prev: GameState, actor: PlayerIndex, action: GameAct
             text: `Dispositif retardé armé : ${roomName(action.room)} (déclenchement à votre prochain tour).`,
             visibility: actor,
             kind: 'info',
+            key: 'log.delayedArm',
+            params: { room: action.room },
           });
           pushLog(s, {
             actor,
             text: `Le joueur ${actor + 1} manipule quelque chose dans le Sous-sol…`,
             visibility: other(actor) as Visibility,
             kind: 'reveal',
+            key: 'log.basementDeviceOpp',
+            params: { player: actor },
           });
           break;
         }
@@ -654,6 +729,8 @@ export function applyAction(prev: GameState, actor: PlayerIndex, action: GameAct
         text: `Le joueur ${actor + 1} abandonne. Victoire du joueur ${other(actor) + 1} !`,
         visibility: 'both',
         kind: 'system',
+        key: 'log.resign',
+        params: { player: actor, player2: other(actor) },
       });
       return s;
     }

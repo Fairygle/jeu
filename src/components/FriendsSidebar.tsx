@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { UiIcon } from './icons';
 import { supabase } from '../lib/supabase';
+import { useI18n } from '../i18n';
 
 interface Props {
   userId: string;
@@ -23,6 +24,7 @@ interface FriendRel {
 const ONLINE_MS = 70_000;
 
 export default function FriendsSidebar({ userId }: Props) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [rels, setRels] = useState<FriendRel[]>([]);
   const [profiles, setProfiles] = useState<Record<string, Profile>>({});
@@ -74,15 +76,15 @@ export default function FriendsSidebar({ userId }: Props) {
       .limit(1)
       .maybeSingle();
     if (!found) {
-      setInfo('Aucun joueur avec ce pseudo.');
+      setInfo(t('friends.notFound'));
       return;
     }
     const { error } = await supabase.from('friends').insert({ user_id: userId, friend_id: found.id });
     if (error) {
-      setInfo(error.code === '23505' ? 'Demande déjà envoyée.' : 'Impossible d’envoyer la demande.');
+      setInfo(error.code === '23505' ? t('friends.alreadySent') : 'Impossible d’envoyer la demande.');
       return;
     }
-    setInfo(`Demande envoyée à ${found.pseudo}.`);
+    setInfo(`${t('friends.sentTo')} ${found.pseudo}.`);
     setSearch('');
     load();
   }
@@ -118,13 +120,13 @@ export default function FriendsSidebar({ userId }: Props) {
         <div className="friends-overlay" onClick={() => setOpen(false)}>
           <aside className="friends-panel" onClick={(e) => e.stopPropagation()}>
             <div className="friends-header">
-              <span>Amis {accepted.length > 0 && <span className="muted small">({onlineCount} en ligne)</span>}</span>
+              <span>{t('friends.title')} {accepted.length > 0 && <span className="muted small">({onlineCount} {t('friends.online')})</span>}</span>
               <button className="wheel-close-inline" onClick={() => setOpen(false)}>✕</button>
             </div>
 
             {!ready ? (
               <div className="friends-empty">
-                La liste d'amis n'est pas encore activée sur le serveur (migration SQL à passer).
+                {t('friends.unavailable')}
               </div>
             ) : (
               <div className="friends-body">
@@ -133,7 +135,7 @@ export default function FriendsSidebar({ userId }: Props) {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && addFriend()}
-                    placeholder="Pseudo à ajouter…"
+                    placeholder={t('friends.add')}
                     maxLength={40}
                   />
                   <button className="chat-send" onClick={addFriend} disabled={!search.trim()}>+</button>
@@ -142,7 +144,7 @@ export default function FriendsSidebar({ userId }: Props) {
 
                 {incoming.length > 0 && (
                   <>
-                    <div className="friends-section">Demandes reçues</div>
+                    <div className="friends-section">{t('friends.requests')}</div>
                     {incoming.map((r) => (
                       <div key={r.id} className="friend-row">
                         <span className="friend-name">{nameOf(r)}</span>
@@ -153,8 +155,8 @@ export default function FriendsSidebar({ userId }: Props) {
                   </>
                 )}
 
-                <div className="friends-section">Mes amis</div>
-                {accepted.length === 0 && <div className="friends-empty">Aucun ami pour l'instant. Ajoutez-les par pseudo !</div>}
+                <div className="friends-section">{t('friends.mine')}</div>
+                {accepted.length === 0 && <div className="friends-empty">{t('friends.none')}</div>}
                 {accepted
                   .sort((a, b) => Number(isOnline(profOf(b))) - Number(isOnline(profOf(a))))
                   .map((r) => (
@@ -162,7 +164,7 @@ export default function FriendsSidebar({ userId }: Props) {
                       <span className={`presence-dot ${isOnline(profOf(r)) ? 'on' : 'off'}`} />
                       <span className="friend-name">{nameOf(r)}</span>
                       <span className="muted small" style={{ marginLeft: 'auto' }}>
-                        {isOnline(profOf(r)) ? 'en ligne' : 'hors ligne'}
+                        {isOnline(profOf(r)) ? t('friends.online') : t('friends.offline')}
                       </span>
                       <button className="mini-btn no" title="Retirer" onClick={() => remove(r)}>✕</button>
                     </div>
@@ -170,11 +172,11 @@ export default function FriendsSidebar({ userId }: Props) {
 
                 {outgoing.length > 0 && (
                   <>
-                    <div className="friends-section">Demandes envoyées</div>
+                    <div className="friends-section">{t('friends.sent')}</div>
                     {outgoing.map((r) => (
                       <div key={r.id} className="friend-row">
                         <span className="friend-name muted">{nameOf(r)}</span>
-                        <span className="muted small" style={{ marginLeft: 'auto' }}>en attente</span>
+                        <span className="muted small" style={{ marginLeft: 'auto' }}>{t('friends.pending')}</span>
                         <button className="mini-btn no" onClick={() => remove(r)}>✕</button>
                       </div>
                     ))}

@@ -4,6 +4,7 @@ import ChatBox, { ChatMessage } from '../components/ChatBox';
 import { ADJACENCY, ALL_ROOMS, RoomId } from '../game/board';
 import { GameAction, GameState, PlayerIndex, applyAction, newGame } from '../game/engine';
 import { makeGameCode, supabase } from '../lib/supabase';
+import { useI18n } from '../i18n';
 
 interface Props {
   userId: string;
@@ -68,6 +69,7 @@ export default function OnlineGame({ userId, pseudo, onBack, initialMode = 'code
   const [opponentLeft, setOpponentLeft] = useState(false);
   const [foundGame, setFoundGame] = useState<GameRow | null>(null); // proposition de match
   const [searching, setSearching] = useState(false);
+  const { t } = useI18n();
   const rowRef = useRef<GameRow | null>(null);
   rowRef.current = row;
   const autoQuickTried = useRef(false);
@@ -295,11 +297,11 @@ export default function OnlineGame({ userId, pseudo, onBack, initialMode = 'code
     return (
       <div className="center-page">
         <div className="panel auth-card lobby-card" style={{ textAlign: 'center' }}>
-          <h2>Partie trouvée</h2>
+          <h2>{t('home.found')}</h2>
           <p className="found-name">{foundGame.host_pseudo}</p>
           {error && <div className="error-box">{error}</div>}
           <button className="btn btn-gold btn-block btn-lg" onClick={() => confirmJoin(foundGame)} disabled={busy}>
-            Rejoindre
+            {t('mp.join')}
           </button>
           <button
             className="btn btn-block mt"
@@ -309,7 +311,7 @@ export default function OnlineGame({ userId, pseudo, onBack, initialMode = 'code
             }}
             disabled={busy}
           >
-            Refuser
+            {t('home.refuse')}
           </button>
         </div>
       </div>
@@ -322,7 +324,7 @@ export default function OnlineGame({ userId, pseudo, onBack, initialMode = 'code
       <div className="center-page">
         <div className="panel auth-card lobby-card">
           <div className="row spread mb">
-            <h2>Multijoueur</h2>
+            <h2>{t('mp.title')}</h2>
             <button className="btn btn-icon" onClick={onBack} aria-label="Retour">←</button>
           </div>
           {error && <div className="error-box">{error}</div>}
@@ -331,11 +333,11 @@ export default function OnlineGame({ userId, pseudo, onBack, initialMode = 'code
               className="lobby-code-input"
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              placeholder="CODE"
+              placeholder={t('mp.code')}
               maxLength={6}
             />
             <button className="btn" onClick={joinByCode} disabled={busy || joinCode.length !== 6}>
-              Rejoindre
+              {t('mp.join')}
             </button>
           </div>
         </div>
@@ -349,17 +351,17 @@ export default function OnlineGame({ userId, pseudo, onBack, initialMode = 'code
     return (
       <div className="center-page">
         <div className="panel auth-card lobby-card" style={{ textAlign: 'center' }}>
-          <h2>{isSearch ? 'Recherche…' : 'Partie créée'}</h2>
+          <h2>{isSearch ? t('mp.searchingTitle') : t('mp.created')}</h2>
           {!isSearch && <div className="code-badge mt">{row.code}</div>}
-          <p className="muted small mt">En attente d'un adversaire<span className="dots" /></p>
-          <button className="btn btn-block mt" onClick={quitGame}>Annuler</button>
+          <p className="muted small mt">{t('mp.waiting')}<span className="dots" /></p>
+          <button className="btn btn-block mt" onClick={quitGame}>{t('mp.cancel')}</button>
         </div>
       </div>
     );
   }
 
   // ------- Partie -------
-  const names: [string, string] = [row.host_pseudo || 'Joueur 1', row.guest_pseudo || 'Joueur 2'];
+  const names: [string, string] = [row.host_pseudo || t('game.player1'), row.guest_pseudo || t('game.player2')];
   const s = row.state;
   const myTurnToAct =
     s.phase === 'setup' ? s.setupTurn === me : s.pending ? s.pending.responder === me : s.active === me;
@@ -392,17 +394,17 @@ export default function OnlineGame({ userId, pseudo, onBack, initialMode = 'code
 
       {opponentLeft && s.phase !== 'finished' && (
         <div className="game-over">
-          <h2>Adversaire déconnecté</h2>
-          <p className="muted">{opponentName} a quitté la partie.</p>
-          <button className="btn btn-gold btn-lg" onClick={onBack}>Retour à l'accueil</button>
+          <h2>{t('mp.disconnected')}</h2>
+          <p className="muted">{opponentName} {t('mp.leftGame')}</p>
+          <button className="btn btn-gold btn-lg" onClick={onBack}>{t('mp.backHome')}</button>
         </div>
       )}
 
       {s.phase === 'finished' && (
         <div className="game-over">
-          <h2>{s.winner === me ? 'Victoire !' : s.winner !== null ? 'Défaite…' : 'Partie terminée'}</h2>
-          <p className="muted">{s.winner !== null ? `${names[s.winner]} l'emporte.` : ''}</p>
-          <button className="btn btn-gold btn-lg" onClick={onBack}>Retour à l'accueil</button>
+          <h2>{s.winner === me ? t('mp.victory') : s.winner !== null ? t('mp.defeat') : t('mp.over')}</h2>
+          <p className="muted">{s.winner !== null ? `${names[s.winner]} ${t('mp.wins')}` : ''}</p>
+          <button className="btn btn-gold btn-lg" onClick={onBack}>{t('mp.backHome')}</button>
         </div>
       )}
     </div>

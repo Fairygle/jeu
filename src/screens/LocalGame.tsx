@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import GameView from '../components/GameView';
 import { GameAction, GameState, PlayerIndex, applyAction, newGame } from '../game/engine';
+import { useI18n } from '../i18n';
 
 interface Props {
   onBack: () => void;
@@ -19,7 +20,8 @@ export default function LocalGame({ onBack }: Props) {
   const [handoff, setHandoff] = useState<PlayerIndex | null>(0); // écran de passage
   const [error, setError] = useState<string | null>(null);
 
-  const names: [string, string] = ['Joueur 1', 'Joueur 2'];
+  const { t } = useI18n();
+  const names: [string, string] = [t('game.player1'), t('game.player2')];
 
   function act(action: GameAction) {
     setError(null);
@@ -38,10 +40,9 @@ export default function LocalGame({ onBack }: Props) {
   if (handoff !== null) {
     return (
       <div className="handoff">
-        <h2>Passez l'appareil</h2>
+        <h2>{t('local.passDevice')}</h2>
         <p>
-          Au tour de <strong>{names[handoff]}</strong>. Les autres, détournez le
-          regard — la maison garde ses secrets.
+          {t('local.handoff')} <strong>{names[handoff]}</strong>. {t('local.handoffHint')}
         </p>
         <button
           className="btn btn-gold btn-lg"
@@ -50,7 +51,7 @@ export default function LocalGame({ onBack }: Props) {
             setHandoff(null);
           }}
         >
-          Je suis {names[handoff]} — afficher
+          {t('local.ready')} {names[handoff]} — {t('local.readyShow')}
         </button>
       </div>
     );
@@ -82,13 +83,13 @@ export default function LocalGame({ onBack }: Props) {
 
       {state.phase === 'finished' && (
         <div className="game-over">
-          <h2>{state.winner !== null ? `${names[state.winner]} l'emporte !` : 'Partie terminée'}</h2>
-          <p className="muted">La maison retombe dans le silence.</p>
+          <h2>{state.winner !== null ? `${names[state.winner]} ${t('local.wins')}` : t('mp.over')}</h2>
+          <p className="muted">{t('local.silence')}</p>
           <div className="row">
             <button className="btn btn-gold btn-lg" onClick={() => { setState(newGame()); setHolder(0); setHandoff(0); }}>
-              Rejouer
+              {t('local.replay')}
             </button>
-            <button className="btn btn-lg" onClick={onBack}>Accueil</button>
+            <button className="btn btn-lg" onClick={onBack}>{t('local.home')}</button>
           </div>
         </div>
       )}
