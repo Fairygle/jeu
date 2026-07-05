@@ -90,6 +90,7 @@ const FR: Dict = {
   'game.foldTo': 'Repli vers',
   'game.neighbors': 'Pièces voisines :',
   'game.escapeTo': 'Fuyez vers :',
+  'game.pickDelayedRoom': 'Choisissez la pièce du dispositif retardé.',
   // Actions
   'act.move': 'Aller',
   'act.fold': 'Repli',
@@ -287,6 +288,7 @@ const EN: Dict = {
   'game.foldTo': 'Fall back to',
   'game.neighbors': 'Neighboring rooms:',
   'game.escapeTo': 'Escape to:',
+  'game.pickDelayedRoom': 'Choose the room for the delayed device.',
   'act.move': 'Move',
   'act.fold': 'Fall back',
   'act.sprint': 'Sprint',

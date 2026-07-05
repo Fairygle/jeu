@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ADJACENCY, ALL_ROOMS, LINE_OF_SIGHT, ROOMS, RoomId, reachable } from '../game/board';
-import { GameAction, GameState, PlayerIndex, hasValidAction, roomEffectCost } from '../game/engine';
+import { GameAction, GameState, PlayerIndex, hasValidAction, roomEffectCost, validTargets } from '../game/engine';
 import { ActionIcon, Hearts } from './icons';
 import { ROOM_DECOR } from './decor';
 import { useGameEvents } from './useGameEvents';
@@ -24,6 +24,8 @@ interface WheelOption {
   label: string;
   cost: string;
   action: GameAction;
+  /** Au lieu d'exécuter l'action directement, ouvre un mode de sélection de pièce. */
+  startPicking?: 'delayedTrap';
 }
 
 const EFFECT_INFO: Partial<Record<RoomId, { icon: string; label: string }>> = {
@@ -38,6 +40,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
   const { t } = useI18n();
   const [wheelRoom, setWheelRoom] = useState<RoomId | null>(null);
   const [wheelAnchor, setWheelAnchor] = useState<{ x: number; y: number; side: 'left' | 'right' } | null>(null);
+  const [pickingDelayed, setPickingDelayed] = useState(false);
   const [showLog, setShowLog] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -58,6 +61,16 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
   const isSetup = state.phase === 'setup';
   const pendingForMe = Boolean(state.pending && state.pending.responder === viewer);
   const myTurn = state.phase === 'playing' && state.active === viewer && !state.pending && canAct;
+
+  // Cibles valables pour poser le dispositif retardé (mode sélection depuis le Sous-sol)
+  const delayedTargets: RoomId[] = useMemo(
+    () => (pickingDelayed ? validTargets(state, viewer, 'activate_room') : []),
+    [pickingDelayed, state, viewer],
+  );
+  // Sort automatiquement du mode sélection si le tour/l'état change entretemps
+  useEffect(() => {
+    if (pickingDelayed && (!myTurn || me.room !== 8)) setPickingDelayed(false);
+  }, [pickingDelayed, myTurn, me.room]);
 
   // Invite « Repliez-vous » : dès qu'un repli gratuit devient disponible pour moi
   const [foldPrompt, setFoldPrompt] = useState(false);
@@ -128,13 +141,14 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
   }, [state, pendingForMe, myTurn, me.room]);
 
   const legendText: string | null = useMemo(() => {
+    if (pickingDelayed) return t('game.pickDelayedRoom');
     const names = neighborRooms.map((r) => ROOMS[r].name).join(', ');
     if (myTurn && me.room !== null && neighborRooms.length > 0)
       return me.freeMoveAvailable ? `${t('game.foldTo')} → ${names}` : `${t('game.from')} ${ROOMS[me.room].name} → ${names}`;
     if (pendingForMe && state.pending?.kind === 'listen' && neighborRooms.length > 0) return `${t('game.neighbors')} ${names}`;
     if (pendingForMe && state.pending?.kind === 'escape' && neighborRooms.length > 0) return `${t('game.escapeTo')} ${names}`;
     return null;
-  }, [neighborRooms, myTurn, me.room, me.freeMoveAvailable, pendingForMe, state.pending]);
+  }, [neighborRooms, myTurn, me.room, me.freeMoveAvailable, pendingForMe, state.pending, pickingDelayed, t]);
 
   function optionsFor(room: RoomId): WheelOption[] {
     if (!myTurn || me.room === null) return [];
@@ -159,15 +173,6 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
     if (me.traps.includes(room) && me.ap >= 1) {
       opts.push({ icon: 'detonator', label: t('act.trigger'), cost: '1 PA', action: { type: 'activate_trap', room } });
     }
-    if (
-      me.room === 8 &&
-      me.ap >= 1 &&
-      me.traps.length + me.delayedTraps.length < 2 &&
-      !me.traps.includes(room) &&
-      !me.delayedTraps.includes(room)
-    ) {
-      opts.push({ icon: 'timedynamite', label: t('act.delayed'), cost: '1 PA', action: { type: 'activate_room', room } });
-    }
     if (room === me.room) {
       if (me.ap >= 1) {
         opts.push({ icon: 'ear', label: t('act.listen'), cost: '1 PA', action: { type: 'listen' } });
@@ -185,6 +190,20 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
           action: { type: 'activate_room' },
         });
       }
+      // Sous-sol : dispositif retardé — déclenche le mode sélection de pièce
+      if (
+        room === 8 &&
+        me.ap >= 1 &&
+        me.traps.length + me.delayedTraps.length < 2
+      ) {
+        opts.push({
+          icon: 'timedynamite',
+          label: t('act.delayed'),
+          cost: '1 PA',
+          action: { type: 'activate_room' },
+          startPicking: 'delayedTrap',
+        });
+      }
     }
     return opts;
   }
@@ -198,6 +217,14 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       return;
     }
     if (!myTurn) return;
+    // Mode sélection du dispositif retardé : un clic sur une pièce valable le pose directement
+    if (pickingDelayed) {
+      if (delayedTargets.includes(room)) {
+        onAction({ type: 'activate_room', room });
+      }
+      setPickingDelayed(false);
+      return;
+    }
     // Repli actif : cliquer une pièce adjacente = repli immédiat, sans passer par la roue
     if (me.freeMoveAvailable && me.room !== null && ADJACENCY[me.room].includes(room)) {
       onAction({ type: 'move', room });
@@ -210,7 +237,8 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
   function clickRoomEl(room: RoomId, e: React.MouseEvent<HTMLButtonElement>) {
     clickRoom(room);
     if (isSetup || pendingForMe) return;
-    // Repli direct : pas de roue à ancrer
+    // Mode sélection ou repli direct : pas de roue à ancrer
+    if (pickingDelayed) return;
     if (me.freeMoveAvailable && me.room !== null && ADJACENCY[me.room].includes(room)) return;
     if (optionsFor(room).length === 0) return;
     // Point de toucher exact ; repli sur le centre de la pièce (clavier)
@@ -231,6 +259,10 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
   function pick(opt: WheelOption) {
     setWheelRoom(null);
     setWheelAnchor(null);
+    if (opt.startPicking === 'delayedTrap') {
+      setPickingDelayed(true);
+      return;
+    }
     onAction(opt.action);
   }
 
@@ -302,7 +334,16 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
         </div>
       )}
       {error && <div className="error-box error-mini">{error}</div>}
-      {legendText && <div className="legend-banner">{legendText}</div>}
+      {legendText && (
+        <div className="legend-banner">
+          {legendText}
+          {pickingDelayed && (
+            <button className="legend-cancel" onClick={() => setPickingDelayed(false)}>
+              ✕
+            </button>
+          )}
+        </div>
+      )}
 
 
       {/* Les deux joueurs face à face, au-dessus du plateau */}
@@ -322,7 +363,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
 
       {/* Plateau — occupe l'essentiel de l'écran */}
       <div className="board-wrap" ref={boardWrapRef}>
-        <div className="board">
+        <div className={`board ${pickingDelayed ? 'picking-delayed' : ''}`}>
           <div className="floor-label first" style={{ gridArea: 'lbl2' }}>{t('game.floor.top')}</div>
           {renderRoom('n6', 6)}
           {renderRoom('n3', 3)}
@@ -482,13 +523,14 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
     const flooded = state.basementFlood.active && id === 8;
     const isCurrent = me.room === id && !isSetup;
     const isNeighbor = neighborRooms.includes(id);
+    const isDelayedTarget = pickingDelayed && delayedTargets.includes(id);
     return (
       <button
         key={id}
         ref={(el) => {
           if (el) roomRefs.current.set(id, el);
         }}
-        className={`room ${id === 8 ? 'basement' : ''} ${flooded ? 'flooded' : ''} ${clickable ? 'targetable' : 'not-targetable'} ${isCurrent ? 'current' : ''} ${isNeighbor ? 'neighbor' : ''}`}
+        className={`room ${id === 8 ? 'basement' : ''} ${flooded ? 'flooded' : ''} ${clickable ? 'targetable' : 'not-targetable'} ${isCurrent ? 'current' : ''} ${isNeighbor ? 'neighbor' : ''} ${isDelayedTarget ? 'delayed-target' : ''}`}
         style={{ gridArea: area }}
         onClick={(e) => clickRoomEl(id, e)}
         data-room={id}
@@ -496,7 +538,8 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       >
         <span className="room-name">{ROOMS[id].name}</span>
         <span className="room-tags">
-          {isNeighbor && <span className="pas-mark"><ActionIcon k={me.freeMoveAvailable && !isSetup && !pendingForMe ? 'runner' : 'footprint'} size={15} /></span>}
+          {isDelayedTarget && <span className="pas-mark delayed"><ActionIcon k="timedynamite" size={15} /></span>}
+          {isNeighbor && !isDelayedTarget && <span className="pas-mark"><ActionIcon k={me.freeMoveAvailable && !isSetup && !pendingForMe ? 'runner' : 'footprint'} size={15} /></span>}
           {ROOM_DECOR[id] && <span className="room-decor" aria-hidden="true">{ROOM_DECOR[id]}</span>}
           {hoverOpts.length > 0 && (
             <span className="room-actions">

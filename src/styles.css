@@ -1972,3 +1972,34 @@ button { user-select: none; }
   .token.floating { transition: none !important; }
   .step-puff { animation: none; opacity: 0; }
 }
+
+/* ==========================================================================
+   Mode sélection : dispositif retardé (Sous-sol)
+   ========================================================================== */
+
+.board.picking-delayed .room:not(.delayed-target) {
+  opacity: 0.32;
+}
+.room.delayed-target {
+  opacity: 1 !important;
+  border-color: #a3231d !important;
+  border-width: 3px;
+  box-shadow: 3px 4px 0 rgba(163, 35, 29, 0.55);
+  animation: delayed-pulse 1.4s ease-in-out infinite;
+}
+@keyframes delayed-pulse {
+  0%, 100% { box-shadow: 3px 4px 0 rgba(163, 35, 29, 0.5); }
+  50% { box-shadow: 3px 4px 0 rgba(163, 35, 29, 0.5), 0 0 0 3px rgba(163, 35, 29, 0.3); }
+}
+.pas-mark.delayed { color: #a3231d; }
+
+.legend-cancel {
+  float: right;
+  margin-left: 8px;
+  width: 22px; height: 22px;
+  border: 2px solid #16120c;
+  background: #f4efe3;
+  font-size: 11px;
+  line-height: 1;
+  padding: 0;
+}
