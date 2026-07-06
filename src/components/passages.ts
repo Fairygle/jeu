@@ -1,47 +1,70 @@
 import { RoomId } from '../game/board';
 
-export type PassageKind = 'door' | 'stair';
-
 /**
- * Passages entre pièces adjacentes. Chaque passage relie deux pièces et se
- * matérialise soit par une porte (cloison directe), soit par un escalier
- * (changement d'étage déjà matérialisé sur le plateau).
- * Le point exact est calculé à l'exécution à partir des rectangles mesurés
- * (voir useTokenAnim), cette table ne fournit que le TYPE et le côté.
+ * Règles de trajet explicites entre pièces adjacentes.
+ * Plutôt que de deviner la géométrie (fragile), on décrit chaque passage :
+ *  - via  : 'stairL' | 'stairM' | 'stairR' pour passer par un escalier,
+ *           ou 'door' pour une porte sur cloison directe.
+ *  - axis : ordre du trajet en L. 'h' = horizontal d'abord puis vertical,
+ *           'v' = vertical d'abord puis horizontal.
+ * Le point exact est le centre de l'escalier (si via stair) ou le milieu de
+ * la cloison mitoyenne (si door), calculé à l'exécution depuis les rectangles.
  */
+export type Via = 'stairL' | 'stairM' | 'stairR' | 'door';
+export type Axis = 'h' | 'v';
+
 export interface Passage {
-  a: RoomId;
-  b: RoomId;
-  kind: PassageKind;
+  via: Via;
+  axis: Axis;
 }
 
-// key normalisée "min-max"
 function key(a: RoomId, b: RoomId): string {
   return a < b ? `${a}-${b}` : `${b}-${a}`;
 }
 
-const RAW: Passage[] = [
-  // Escaliers déjà dessinés sur le plateau
-  { a: 4, b: 6, kind: 'stair' }, // Cuisine ↔ Chambre (escalier gauche)
-  { a: 1, b: 7, kind: 'stair' }, // Foyer ↔ Balcon (escalier milieu)
-  { a: 5, b: 8, kind: 'stair' }, // Bibliothèque ↔ Sous-sol (escalier droit)
+// Disposition :
+//   Étage :  Chambre(6)  Hall(3)  Bibliothèque(5)   |  Balcon(7) en bandeau
+//   RDC   :  Cuisine(4)  Salle-à-manger(2)  Foyer(1)
+//   Sous-sol(8) en bandeau tout en bas
+const TABLE: Record<string, Passage> = {
+  // Escaliers
+  [key(4, 6)]: { via: 'stairL', axis: 'v' }, // Cuisine ↔ Chambre (escalier gauche)
+  [key(1, 7)]: { via: 'stairM', axis: 'v' }, // Foyer ↔ Balcon (escalier milieu)
+  [key(5, 8)]: { via: 'stairR', axis: 'v' }, // Bibliothèque ↔ Sous-sol (escalier droit)
 
-  // Portes (cloisons directes entre pièces voisines)
-  { a: 1, b: 2, kind: 'door' }, // Foyer ↔ Salle à manger
-  { a: 1, b: 4, kind: 'door' }, // Foyer ↔ Cuisine
-  { a: 1, b: 8, kind: 'door' }, // Foyer ↔ Sous-sol
-  { a: 2, b: 4, kind: 'door' }, // Salle à manger ↔ Cuisine
-  { a: 2, b: 8, kind: 'door' }, // Salle à manger ↔ Sous-sol
-  { a: 3, b: 5, kind: 'door' }, // Hall ↔ Bibliothèque
-  { a: 3, b: 6, kind: 'door' }, // Hall ↔ Chambre
-  { a: 3, b: 7, kind: 'door' }, // Hall ↔ Balcon
-];
+  // Portes — même étage (RDC), passages horizontaux
+  [key(1, 2)]: { via: 'door', axis: 'h' }, // Foyer ↔ Salle à manger
+  [key(1, 4)]: { via: 'door', axis: 'h' }, // Foyer ↔ Cuisine
+  [key(2, 4)]: { via: 'door', axis: 'h' }, // Salle à manger ↔ Cuisine
 
-const MAP = new Map<string, Passage>();
-for (const p of RAW) MAP.set(key(p.a, p.b), p);
+  // Portes — étage (Hall central), passages horizontaux
+  [key(3, 5)]: { via: 'door', axis: 'h' }, // Hall ↔ Bibliothèque
+  [key(3, 6)]: { via: 'door', axis: 'h' }, // Hall ↔ Chambre
+
+  // Portes — verticales (bandeaux Balcon / Sous-sol vers pièces au-dessus/dessous)
+  [key(3, 7)]: { via: 'door', axis: 'v' }, // Hall ↔ Balcon
+  [key(1, 8)]: { via: 'door', axis: 'v' }, // Foyer ↔ Sous-sol
+  [key(2, 8)]: { via: 'door', axis: 'v' }, // Salle à manger ↔ Sous-sol
+};
 
 export function passageBetween(a: RoomId, b: RoomId): Passage | null {
-  return MAP.get(key(a, b)) ?? null;
+  return TABLE[key(a, b)] ?? null;
 }
 
-export const ALL_PASSAGES = RAW;
+// Pour dessiner les petites portes : liste des passages de type 'door'.
+export const DOOR_PAIRS: [RoomId, RoomId, Axis][] = [
+  [1, 2, 'h'],
+  [1, 4, 'h'],
+  [2, 4, 'h'],
+  [3, 5, 'h'],
+  [3, 6, 'h'],
+  [3, 7, 'v'],
+  [1, 8, 'v'],
+  [2, 8, 'v'],
+];
+
+export const STAIR_OF: Record<string, 'stairL' | 'stairM' | 'stairR'> = {
+  [key(4, 6)]: 'stairL',
+  [key(1, 7)]: 'stairM',
+  [key(5, 8)]: 'stairR',
+};

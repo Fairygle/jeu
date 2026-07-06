@@ -7,7 +7,7 @@ import { useGameEvents } from './useGameEvents';
 import { useI18n } from '../i18n';
 import { renderLog } from '../logI18n';
 import { useTokenAnim } from './useTokenAnim';
-import { ALL_PASSAGES } from './passages';
+import { DOOR_PAIRS } from './passages';
 
 interface Props {
   state: GameState;
@@ -100,34 +100,29 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       if (!wrap) return;
       const wr = wrap.getBoundingClientRect();
       const marks: { x: number; y: number; vertical: boolean }[] = [];
-      for (const p of ALL_PASSAGES) {
-        if (p.kind !== 'door') continue; // les escaliers sont déjà dessinés
-        const ea = roomRefs.current.get(p.a);
-        const eb = roomRefs.current.get(p.b);
+      for (const [a, b, axis] of DOOR_PAIRS) {
+        const ea = roomRefs.current.get(a);
+        const eb = roomRefs.current.get(b);
         if (!ea || !eb) continue;
         const ra = ea.getBoundingClientRect();
         const rb = eb.getBoundingClientRect();
         const aL = ra.left - wr.left, aR = ra.right - wr.left, aT = ra.top - wr.top, aB = ra.bottom - wr.top;
         const bL = rb.left - wr.left, bR = rb.right - wr.left, bT = rb.top - wr.top, bB = rb.bottom - wr.top;
-        const ovX = Math.min(aR, bR) - Math.max(aL, bL);
-        const ovY = Math.min(aB, bB) - Math.max(aT, bT);
-        if (ovX > ovY && ovX > 0) {
-          // cloison horizontale -> porte couchée, passage vertical
-          const x = (Math.max(aL, bL) + Math.min(aR, bR)) / 2;
-          const y = aB < bT ? (aB + bT) / 2 : (bB + aT) / 2;
-          marks.push({ x, y, vertical: false });
-        } else if (ovY > 0) {
-          // cloison verticale -> porte debout, passage horizontal
-          const y = (Math.max(aT, bT) + Math.min(aB, bB)) / 2;
+        if (axis === 'h') {
           const x = aR < bL ? (aR + bL) / 2 : (bR + aL) / 2;
+          const y = (Math.max(aT, bT) + Math.min(aB, bB)) / 2;
           marks.push({ x, y, vertical: true });
+        } else {
+          const y = aB < bT ? (aB + bT) / 2 : (bB + aT) / 2;
+          const x = (Math.max(aL, bL) + Math.min(aR, bR)) / 2;
+          marks.push({ x, y, vertical: false });
         }
       }
       setDoorMarks(marks);
     }
     place();
     window.addEventListener('resize', place);
-    const t = window.setTimeout(place, 300); // après stabilisation du layout
+    const t = window.setTimeout(place, 300);
     return () => {
       window.removeEventListener('resize', place);
       clearTimeout(t);
@@ -416,9 +411,9 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
           {renderRoom('n5', 5)}
           {renderRoom('n7', 7)}
           <div className="floor-label" style={{ gridArea: 'lbl1' }}>{t('game.floor.ground')}</div>
-          <div className="stair stair-left" aria-hidden="true" ref={(el) => { if (el) stairRefs.current.set('4-6', el); }} />
-          <div className="stair stair-mid" aria-hidden="true" ref={(el) => { if (el) stairRefs.current.set('1-7', el); }} />
-          <div className="stair stair-right" aria-hidden="true" ref={(el) => { if (el) stairRefs.current.set('5-8', el); }} />
+          <div className="stair stair-left" aria-hidden="true" ref={(el) => { if (el) stairRefs.current.set('stairL', el); }} />
+          <div className="stair stair-mid" aria-hidden="true" ref={(el) => { if (el) stairRefs.current.set('stairM', el); }} />
+          <div className="stair stair-right" aria-hidden="true" ref={(el) => { if (el) stairRefs.current.set('stairR', el); }} />
           {renderRoom('n4', 4)}
           {renderRoom('n1', 1)}
           {renderRoom('n2', 2)}

@@ -1,6 +1,6 @@
 import { RefObject, useLayoutEffect, useRef, useState } from 'react';
 import { ADJACENCY, RoomId } from '../game/board';
-
+import { Axis, passageBetween } from './passages';
 
 export interface TokenStyle {
   left: number;
@@ -17,53 +17,31 @@ function rectOf(wrap: HTMLElement, el: HTMLElement): Rect {
   const er = el.getBoundingClientRect();
   const left = er.left - wr.left;
   const top = er.top - wr.top;
-  return {
-    left,
-    top,
-    right: left + er.width,
-    bottom: top + er.height,
-    cx: left + er.width / 2,
-    cy: top + er.height / 2,
-  };
+  return { left, top, right: left + er.width, bottom: top + er.height, cx: left + er.width / 2, cy: top + er.height / 2 };
 }
 
-/** Pièce de passage plausible entre deux salles (pour le sprint). */
 function pickIntermediate(from: RoomId, to: RoomId): RoomId | null {
   const a = ADJACENCY[from] || [];
   const b = ADJACENCY[to] || [];
   return a.find((r) => b.includes(r)) ?? null;
 }
 
-/**
- * Point de passage (porte ou escalier) entre deux pièces : le centre de
- * l'interstice mitoyen. Le trajet du jeton passe par ce point, ce qui donne
- * un cheminement en L par la cloison plutôt qu'une diagonale.
- */
-function gatePoint(a: Rect, b: Rect): Pt {
-  const ovX = Math.min(a.right, b.right) - Math.max(a.left, b.left);
-  const ovY = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
-  if (ovX > ovY && ovX > 0) {
-    // cloison horizontale -> passage vertical entre les deux
-    const x = (Math.max(a.left, b.left) + Math.min(a.right, b.right)) / 2;
-    const y = a.cy < b.cy ? (a.bottom + b.top) / 2 : (a.top + b.bottom) / 2;
-    return { x, y };
-  }
-  if (ovY > 0) {
-    const y = (Math.max(a.top, b.top) + Math.min(a.bottom, b.bottom)) / 2;
+/** Milieu de la cloison mitoyenne entre deux pièces (pour une porte). */
+function doorPoint(a: Rect, b: Rect, axis: Axis): Pt {
+  if (axis === 'h') {
+    // passage horizontal : x au milieu de l'espace entre les deux, y aligné sur le recouvrement
     const x = a.cx < b.cx ? (a.right + b.left) / 2 : (a.left + b.right) / 2;
+    const y = (Math.max(a.top, b.top) + Math.min(a.bottom, b.bottom)) / 2;
     return { x, y };
   }
-  // pièces en diagonale : coin en L
-  return { x: a.cx, y: b.cy };
+  const y = a.cy < b.cy ? (a.bottom + b.top) / 2 : (a.top + b.bottom) / 2;
+  const x = (Math.max(a.left, b.left) + Math.min(a.right, b.right)) / 2;
+  return { x, y };
 }
 
-const STEP_MS = 150; // durée par segment élémentaire du trajet
+const STEP_MS = 140;
 const EASE = 'cubic-bezier(0.4, 0, 0.2, 1)';
-const EASE_END = 'cubic-bezier(0.34, 1.12, 0.64, 1)';
-
-function stairKey(a: RoomId, b: RoomId): string {
-  return a < b ? `${a}-${b}` : `${b}-${a}`;
-}
+const EASE_END = 'cubic-bezier(0.34, 1.1, 0.64, 1)';
 
 export function useTokenAnim(
   boardWrapRef: RefObject<HTMLDivElement>,
@@ -99,115 +77,121 @@ export function useTokenAnim(
     const wasVisible = prevVisible.current;
     const from = prevRoom.current;
 
+    const settle = () => {
+      prevVisible.current = true;
+      prevRoom.current = room;
+    };
+
     if (!wasVisible || from === null) {
-      // Apparition : fondu sur place (trajet inconnu -> brouillard de guerre)
+      // Apparition en fondu (brouillard de guerre : trajet inconnu)
       setStyle({ left: destRect.cx, top: destRect.cy, opacity: 0, transition: 'none' });
       const id = window.setTimeout(() => {
         setStyle({ left: destRect.cx, top: destRect.cy, opacity: 1, transition: 'opacity 260ms ease' });
         onPuff(destRect.cx, destRect.cy);
       }, 16);
       timers.current.push(id);
-    } else if (from === room) {
-      setStyle((s) => ({ ...s, left: destRect.cx, top: destRect.cy, opacity: 1 }));
-    } else {
-      const fromEl = roomRefs.current?.get(from);
-      const fromRect = fromEl ? rectOf(wrap, fromEl) : null;
-
-      // Construit la chaîne de pièces à traverser (départ -> [intermédiaire] -> arrivée)
-      const chain: RoomId[] = [from];
-      if (isDoubleHop) {
-        const midId = pickIntermediate(from, room);
-        if (midId && midId !== from && midId !== room) chain.push(midId);
-      }
-      chain.push(room);
-
-      // Waypoints en pixels, routés par les interstices
-      const rects = chain.map((r) => {
-        const e = roomRefs.current?.get(r);
-        return e ? rectOf(wrap, e) : null;
-      });
-      const waypoints: Pt[] = [];
-      if (rects.some((r) => !r)) {
-        // fallback direct si une mesure manque
-        setStyle({ left: destRect.cx, top: destRect.cy, opacity: 1, transition: `left 450ms ${EASE}, top 450ms ${EASE}` });
-        const t = window.setTimeout(() => onPuff(destRect.cx, destRect.cy), 450);
-        timers.current.push(t);
-      } else {
-        const rawWaypoints: Pt[] = [];
-        const rawStops: boolean[] = [];
-        let cursor: Pt = { x: rects[0]!.cx, y: rects[0]!.cy };
-        const pushOrtho = (target: Pt, stop: boolean) => {
-          // Décompose le trajet cursor -> target en 2 segments à 90° (L).
-          // On bouge d'abord sur l'axe du plus grand écart, puis sur l'autre.
-          const dx = Math.abs(target.x - cursor.x);
-          const dy = Math.abs(target.y - cursor.y);
-          if (dx > 1.5 && dy > 1.5) {
-            const corner: Pt = dx >= dy ? { x: target.x, y: cursor.y } : { x: cursor.x, y: target.y };
-            rawWaypoints.push(corner);
-            rawStops.push(false);
-            cursor = corner;
-          }
-          rawWaypoints.push(target);
-          rawStops.push(stop);
-          cursor = target;
-        };
-        for (let i = 0; i < rects.length - 1; i++) {
-          const ra = rects[i]!;
-          const rb = rects[i + 1]!;
-          // Escalier entre ces deux pièces ? -> passer par son centre
-          const stEl = stairRefs?.current?.get(stairKey(chain[i], chain[i + 1]));
-          const gate = stEl ? (() => { const r = rectOf(wrap, stEl); return { x: r.cx, y: r.cy }; })() : gatePoint(ra, rb);
-          pushOrtho(gate, false); // rejoint la porte/l'escalier en L
-          pushOrtho({ x: rb.cx, y: rb.cy }, true); // entre au centre en L
-        }
-        // Retire les points quasi identiques consécutifs (évite les temps morts)
-        const stopFlags: boolean[] = [];
-        for (let i = 0; i < rawWaypoints.length; i++) {
-          const prev = waypoints[waypoints.length - 1];
-          const p = rawWaypoints[i];
-          if (prev && Math.abs(prev.x - p.x) < 1.5 && Math.abs(prev.y - p.y) < 1.5) {
-            if (rawStops[i]) stopFlags[stopFlags.length - 1] = true;
-            continue;
-          }
-          waypoints.push(p);
-          stopFlags.push(rawStops[i]);
-        }
-
-        if (fromRect) onPuff(fromRect.cx, fromRect.cy);
-
-        // Anime en enchaînant les waypoints
-        let acc = 0;
-        waypoints.forEach((p, i) => {
-          const isLast = i === waypoints.length - 1;
-          const t = window.setTimeout(() => {
-            setStyle({
-              left: p.x,
-              top: p.y,
-              opacity: 1,
-              transition: `left ${STEP_MS}ms ${isLast ? EASE_END : EASE}, top ${STEP_MS}ms ${isLast ? EASE_END : EASE}`,
-            });
-            // pichenette aux arrêts en pièce (arrivée dans une salle de la chaîne)
-            if (stopFlags[i]) {
-              const pt = window.setTimeout(() => onPuff(p.x, p.y), STEP_MS);
-              timers.current.push(pt);
-            }
-          }, acc);
-          timers.current.push(t);
-          acc += STEP_MS;
-        });
-      }
+      settle();
+      return;
     }
 
-    prevVisible.current = true;
-    prevRoom.current = room;
+    if (from === room) {
+      setStyle((s) => ({ ...s, left: destRect.cx, top: destRect.cy, opacity: 1 }));
+      settle();
+      return;
+    }
 
-    return () => {
-      timers.current.forEach(clearTimeout);
+    // Chaîne de pièces à traverser
+    const chain: RoomId[] = [from];
+    if (isDoubleHop) {
+      const midId = pickIntermediate(from, room);
+      if (midId && midId !== from && midId !== room) chain.push(midId);
+    }
+    chain.push(room);
+
+    const rectFor = (r: RoomId) => {
+      const e = roomRefs.current?.get(r);
+      return e ? rectOf(wrap, e) : null;
     };
+
+    // Construit les waypoints : pour chaque étape, un point de passage puis le centre.
+    const waypoints: Pt[] = [];
+    const stops: boolean[] = [];
+    let cursor: Pt = (() => { const r = rectFor(from)!; return { x: r.cx, y: r.cy }; })();
+    let ok = true;
+
+    const goTo = (target: Pt, axis: Axis, stop: boolean) => {
+      // trajet en L strict selon l'axe demandé
+      const first: Pt = axis === 'h' ? { x: target.x, y: cursor.y } : { x: cursor.x, y: target.y };
+      if (Math.abs(first.x - cursor.x) > 1.5 || Math.abs(first.y - cursor.y) > 1.5) {
+        waypoints.push(first); stops.push(false); cursor = first;
+      }
+      if (Math.abs(target.x - cursor.x) > 1.5 || Math.abs(target.y - cursor.y) > 1.5) {
+        waypoints.push(target); stops.push(stop); cursor = target;
+      } else if (stop && stops.length) {
+        stops[stops.length - 1] = true;
+      }
+    };
+
+    for (let i = 0; i < chain.length - 1 && ok; i++) {
+      const a = chain[i], b = chain[i + 1];
+      const ra = rectFor(a), rb = rectFor(b);
+      const pass = passageBetween(a, b);
+      if (!ra || !rb || !pass) { ok = false; break; }
+
+      // Point de passage : centre de l'escalier, ou milieu de cloison pour une porte
+      let gate: Pt;
+      if (pass.via !== 'door' && stairRefs?.current) {
+        const stEl =
+          pass.via === 'stairL' ? stairRefs.current.get('stairL')
+          : pass.via === 'stairM' ? stairRefs.current.get('stairM')
+          : stairRefs.current.get('stairR');
+        if (stEl) { const r = rectOf(wrap, stEl); gate = { x: r.cx, y: r.cy }; }
+        else gate = doorPoint(ra, rb, pass.axis);
+      } else {
+        gate = doorPoint(ra, rb, pass.axis);
+      }
+
+      goTo(gate, pass.axis, false);
+      goTo({ x: rb.cx, y: rb.cy }, pass.axis, true);
+    }
+
+    if (!ok || waypoints.length === 0) {
+      // Repli : trajet direct simple (jamais bloquant)
+      setStyle({ left: destRect.cx, top: destRect.cy, opacity: 1, transition: `left 400ms ${EASE}, top 400ms ${EASE}` });
+      const t = window.setTimeout(() => onPuff(destRect.cx, destRect.cy), 400);
+      timers.current.push(t);
+      settle();
+      return;
+    }
+
+    const startR = rectFor(from)!;
+    onPuff(startR.cx, startR.cy);
+
+    let acc = 0;
+    waypoints.forEach((p, i) => {
+      const isLast = i === waypoints.length - 1;
+      const t = window.setTimeout(() => {
+        setStyle({
+          left: p.x,
+          top: p.y,
+          opacity: 1,
+          transition: `left ${STEP_MS}ms ${isLast ? EASE_END : EASE}, top ${STEP_MS}ms ${isLast ? EASE_END : EASE}`,
+        });
+        if (stops[i]) {
+          const pt = window.setTimeout(() => onPuff(p.x, p.y), STEP_MS);
+          timers.current.push(pt);
+        }
+      }, acc);
+      timers.current.push(t);
+      acc += STEP_MS;
+    });
+
+    settle();
+    return () => timers.current.forEach(clearTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room, visible, isDoubleHop]);
 
-  // Repositionnement instantané au redimensionnement
+  // Repositionnement au redimensionnement
   useLayoutEffect(() => {
     function snap() {
       const wrap = boardWrapRef.current;
