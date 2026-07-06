@@ -2113,17 +2113,13 @@ button { user-select: none; }
 .door-mark .knob { fill: #16120c; stroke: none; }
 .door-mark.horiz { transform: translate(-50%, -50%) rotate(90deg); }
 
-/* Repère de tir : pièce dans la ligne de vue (dès que Tirer est possible) */
+/* Repère de tir : pièce dans la ligne de vue (dès que Tirer est possible).
+   Vit dans le flux (.room-tags), à côté du repère de pas, même coin. */
 .shoot-mark {
-  position: absolute;
-  top: 4px;
-  right: 5px;
+  display: inline-flex;
   opacity: 0.8;
   pointer-events: none;
   color: #a3231d;
-}
-/* Si la pièce est aussi voisine (repère de pas présent), on décale le tir en dessous */
-.room.neighbor .shoot-mark { top: 26px; }
-.room.shootable {
-  box-shadow: inset 0 0 0 2px rgba(163, 35, 29, 0.28);
+  position: relative;
+  z-index: 1;
 }
