@@ -181,6 +181,13 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
     return [];
   }, [state, pendingForMe, myTurn, me.room]);
 
+  // Pièces dans la ligne de tir (signalées dès que Tirer est possible : mon tour, 2 PA)
+  const shootRooms: RoomId[] = useMemo(() => {
+    if (!myTurn || me.room === null || pendingForMe || pickingDelayed) return [];
+    if (me.ap < 2) return [];
+    return LINE_OF_SIGHT[me.room].filter((r) => r !== me.room);
+  }, [myTurn, me.room, me.ap, pendingForMe, pickingDelayed]);
+
   const legendText: string | null = useMemo(() => {
     if (pickingDelayed) return t('game.pickDelayedRoom');
     const names = neighborRooms.map((r) => ROOMS[r].name).join(', ');
@@ -581,13 +588,14 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
     const isCurrent = me.room === id && !isSetup;
     const isNeighbor = neighborRooms.includes(id);
     const isDelayedTarget = pickingDelayed && delayedTargets.includes(id);
+    const isShootable = shootRooms.includes(id);
     return (
       <button
         key={id}
         ref={(el) => {
           if (el) roomRefs.current.set(id, el);
         }}
-        className={`room ${id === 8 ? 'basement' : ''} ${flooded ? 'flooded' : ''} ${clickable ? 'targetable' : 'not-targetable'} ${isCurrent ? 'current' : ''} ${isNeighbor ? 'neighbor' : ''} ${isDelayedTarget ? 'delayed-target' : ''}`}
+        className={`room ${id === 8 ? 'basement' : ''} ${flooded ? 'flooded' : ''} ${clickable ? 'targetable' : 'not-targetable'} ${isCurrent ? 'current' : ''} ${isNeighbor ? 'neighbor' : ''} ${isDelayedTarget ? 'delayed-target' : ''} ${isShootable ? 'shootable' : ''}`}
         style={{ gridArea: area }}
         onClick={(e) => clickRoomEl(id, e)}
         data-room={id}
@@ -597,6 +605,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
         <span className="room-tags">
           {isDelayedTarget && <span className="pas-mark delayed"><ActionIcon k="timedynamite" size={15} /></span>}
           {isNeighbor && !isDelayedTarget && <span className="pas-mark"><ActionIcon k={me.freeMoveAvailable && !isSetup && !pendingForMe ? 'runner' : 'footprint'} size={15} /></span>}
+          {isShootable && !isDelayedTarget && <span className="shoot-mark"><ActionIcon k="revolver" size={15} /></span>}
           {ROOM_DECOR[id] && <span className="room-decor" aria-hidden="true">{ROOM_DECOR[id]}</span>}
           {hoverOpts.length > 0 && (
             <span className="room-actions">
