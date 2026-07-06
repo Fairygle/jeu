@@ -166,13 +166,14 @@ export function useTokenAnim(
         // 2) entrer dans la pièce suivante
         if (isFinal) {
           const destRoom = chain[i + 1];
-          // Cas particulier : le Sous-sol est un grand bandeau avec plusieurs
-          // entrées sur son bord haut. On s'arrête dans l'axe de l'entrée
-          // franchie (juste en dessous), pas au centre du bandeau.
+          // Cas particulier : le Sous-sol est un grand bandeau (peu haut) avec
+          // plusieurs entrées sur son bord haut. On s'arrête dans l'axe de
+          // l'entrée franchie, mais bien à l'intérieur (pas collé au seuil).
           const stopInAxis = destRoom === 8 && gate.kind === 'vertical';
+          const restY = stopInAxis ? rb.top + (rb.bottom - rb.top) * 0.6 : rb.cy;
           if (gate.kind === 'vertical') {
             const targetX = stopInAxis ? gate.x : rb.cx;
-            pushPt({ x: gate.x, y: rb.cy }, targetX === gate.x);
+            pushPt({ x: gate.x, y: restY }, targetX === gate.x);
             if (targetX !== gate.x) pushPt({ x: rb.cx, y: rb.cy }, true);
           } else {
             pushPt({ x: rb.cx, y: gate.y }, false);
@@ -180,7 +181,11 @@ export function useTokenAnim(
           }
         }
         // pièce de transit : on ne va PAS au centre, on repart directement vers
-        // le passage suivant depuis le seuil actuel (cursor est déjà sur le seuil).
+        // le passage suivant depuis le seuil actuel. On marque tout de même une
+        // pichenette de pas au seuil pour rendre lisible la traversée (sprint).
+        if (!isFinal && stops.length) {
+          stops[stops.length - 1] = true;
+        }
       }
     }
 
