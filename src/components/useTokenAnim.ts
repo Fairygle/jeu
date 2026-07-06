@@ -179,12 +179,15 @@ export function useTokenAnim(
             pushPt({ x: rb.cx, y: gate.y }, false);
             pushPt({ x: rb.cx, y: rb.cy }, true);
           }
-        }
-        // pièce de transit : on ne va PAS au centre, on repart directement vers
-        // le passage suivant depuis le seuil actuel. On marque tout de même une
-        // pichenette de pas au seuil pour rendre lisible la traversée (sprint).
-        if (!isFinal && stops.length) {
-          stops[stops.length - 1] = true;
+        } else {
+          // Pièce de TRANSIT : on ne va pas au centre, mais on traverse par le
+          // MILIEU de la pièce (pas le long des seuils du bord). On descend/rentre
+          // à mi-hauteur, puis le prochain segment nous mènera vers la sortie.
+          if (gate.kind === 'vertical') {
+            pushPt({ x: gate.x, y: rb.cy }, true); // entre jusqu'au milieu vertical
+          } else {
+            pushPt({ x: rb.cx, y: gate.y }, true);
+          }
         }
       }
     }
