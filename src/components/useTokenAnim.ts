@@ -115,50 +115,67 @@ export function useTokenAnim(
       }
     };
 
-    for (let i = 0; i < chain.length - 1 && ok; i++) {
-      const a = chain[i], b = chain[i + 1];
-      const ra = rectFor(a), rb = rectFor(b);
-      const pass = passageBetween(a, b);
-      if (!ra || !rb || !pass) { ok = false; break; }
-
-      // Coordonnée transverse du passage (là où se trouve la porte / l'escalier)
-      // et axe de franchissement.
-      let crossX: number; // position horizontale du passage
-      let crossKind: 'vertical' | 'horizontal';
-
+    // Calcule le point de passage (porte/escalier) entre deux pièces, avec son
+    // axe de franchissement. Renvoie { x, y, kind } où kind indique l'axe droit.
+    const gateOf = (ra: Rect, rb: Rect, pass: NonNullable<ReturnType<typeof passageBetween>>) => {
       if (pass.via !== 'door') {
-        // Escalier : franchissement vertical, aligné sur la colonne de l'escalier
         const stEl =
           pass.via === 'stairL' ? stairRefs?.current?.get('stairL')
           : pass.via === 'stairM' ? stairRefs?.current?.get('stairM')
           : stairRefs?.current?.get('stairR');
-        crossX = stEl ? rectOf(wrap, stEl).cx : (Math.max(ra.left, rb.left) + Math.min(ra.right, rb.right)) / 2;
-        crossKind = 'vertical';
-      } else if (pass.axis === 'v') {
-        // Porte haut/bas : franchissement vertical, aligné sur le recouvrement horizontal
-        crossX = (Math.max(ra.left, rb.left) + Math.min(ra.right, rb.right)) / 2;
-        crossKind = 'vertical';
-      } else {
-        // Porte gauche/droite : franchissement horizontal, aligné sur le recouvrement vertical
-        crossKind = 'horizontal';
-        crossX = 0; // non utilisé
+        const x = stEl ? rectOf(wrap, stEl).cx : (Math.max(ra.left, rb.left) + Math.min(ra.right, rb.right)) / 2;
+        const y = ra.cy < rb.cy ? (ra.bottom + rb.top) / 2 : (ra.top + rb.bottom) / 2;
+        return { x, y, kind: 'vertical' as const };
       }
+      if (pass.axis === 'v') {
+        const x = (Math.max(ra.left, rb.left) + Math.min(ra.right, rb.right)) / 2;
+        const y = ra.cy < rb.cy ? (ra.bottom + rb.top) / 2 : (ra.top + rb.bottom) / 2;
+        return { x, y, kind: 'vertical' as const };
+      }
+      const y = (Math.max(ra.top, rb.top) + Math.min(ra.bottom, rb.bottom)) / 2;
+      const x = ra.cx < rb.cx ? (ra.right + rb.left) / 2 : (ra.left + rb.right) / 2;
+      return { x, y, kind: 'horizontal' as const };
+    };
 
-      if (crossKind === 'vertical') {
-        // 1) s'aligner face au passage (bouger en X, on reste dans la pièce de départ)
-        pushPt({ x: crossX, y: ra.cy }, false);
-        // 2) franchir tout droit (bouger en Y jusqu'au centre de la pièce d'arrivée, même X)
-        pushPt({ x: crossX, y: rb.cy }, false);
-        // 3) rejoindre le centre de la pièce d'arrivée (bouger en X)
-        pushPt({ x: rb.cx, y: rb.cy }, true);
-      } else {
-        const crossY = (Math.max(ra.top, rb.top) + Math.min(ra.bottom, rb.bottom)) / 2;
-        // 1) s'aligner face à la porte (bouger en Y)
-        pushPt({ x: ra.cx, y: crossY }, false);
-        // 2) franchir tout droit (bouger en X jusqu'au centre X de l'arrivée)
-        pushPt({ x: rb.cx, y: crossY }, false);
-        // 3) rejoindre le centre (bouger en Y)
-        pushPt({ x: rb.cx, y: rb.cy }, true);
+    // Pré-calcule tous les passages de la chaîne
+    const rectsChain = chain.map(rectFor);
+    if (rectsChain.some((r) => !r)) ok = false;
+    const gates = ok
+      ? chain.slice(0, -1).map((_, i) => {
+          const p = passageBetween(chain[i], chain[i + 1]);
+          return p ? gateOf(rectsChain[i]!, rectsChain[i + 1]!, p) : null;
+        })
+      : [];
+    if (gates.some((g) => !g)) ok = false;
+
+    if (ok) {
+      for (let i = 0; i < chain.length - 1; i++) {
+        const rb = rectsChain[i + 1]!;
+        const gate = gates[i]!;
+        const isFinal = i === chain.length - 2;
+
+        // 1) s'aligner face au passage (dans la pièce courante)
+        if (gate.kind === 'vertical') {
+          pushPt({ x: gate.x, y: cursor.y }, false);
+          pushPt({ x: gate.x, y: gate.y }, false); // au niveau du seuil
+        } else {
+          pushPt({ x: cursor.x, y: gate.y }, false);
+          pushPt({ x: gate.x, y: gate.y }, false);
+        }
+
+        // 2) entrer dans la pièce suivante
+        if (isFinal) {
+          // pièce d'arrivée : on rejoint le centre
+          if (gate.kind === 'vertical') {
+            pushPt({ x: gate.x, y: rb.cy }, false);
+            pushPt({ x: rb.cx, y: rb.cy }, true);
+          } else {
+            pushPt({ x: rb.cx, y: gate.y }, false);
+            pushPt({ x: rb.cx, y: rb.cy }, true);
+          }
+        }
+        // pièce de transit : on ne va PAS au centre, on repart directement vers
+        // le passage suivant depuis le seuil actuel (cursor est déjà sur le seuil).
       }
     }
 
