@@ -165,10 +165,15 @@ export function useTokenAnim(
 
         // 2) entrer dans la pièce suivante
         if (isFinal) {
-          // pièce d'arrivée : on rejoint le centre
+          const destRoom = chain[i + 1];
+          // Cas particulier : le Sous-sol est un grand bandeau avec plusieurs
+          // entrées sur son bord haut. On s'arrête dans l'axe de l'entrée
+          // franchie (juste en dessous), pas au centre du bandeau.
+          const stopInAxis = destRoom === 8 && gate.kind === 'vertical';
           if (gate.kind === 'vertical') {
-            pushPt({ x: gate.x, y: rb.cy }, false);
-            pushPt({ x: rb.cx, y: rb.cy }, true);
+            const targetX = stopInAxis ? gate.x : rb.cx;
+            pushPt({ x: gate.x, y: rb.cy }, targetX === gate.x);
+            if (targetX !== gate.x) pushPt({ x: rb.cx, y: rb.cy }, true);
           } else {
             pushPt({ x: rb.cx, y: gate.y }, false);
             pushPt({ x: rb.cx, y: rb.cy }, true);
