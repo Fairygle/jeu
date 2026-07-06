@@ -138,21 +138,30 @@ export function useTokenAnim(
       const pass = passageBetween(a, b);
       if (!ra || !rb || !pass) { ok = false; break; }
 
-      // Point de passage : centre de l'escalier, ou milieu de cloison pour une porte
+      // Point de passage : escalier (aligné sur sa colonne X, à hauteur de l'interstice)
+      // ou milieu de cloison pour une porte.
       let gate: Pt;
       if (pass.via !== 'door' && stairRefs?.current) {
         const stEl =
           pass.via === 'stairL' ? stairRefs.current.get('stairL')
           : pass.via === 'stairM' ? stairRefs.current.get('stairM')
           : stairRefs.current.get('stairR');
-        if (stEl) { const r = rectOf(wrap, stEl); gate = { x: r.cx, y: r.cy }; }
-        else gate = doorPoint(ra, rb, pass.axis);
+        if (stEl) {
+          const rs = rectOf(wrap, stEl);
+          const y = ra.cy < rb.cy ? (ra.bottom + rb.top) / 2 : (ra.top + rb.bottom) / 2;
+          gate = { x: rs.cx, y };
+        } else {
+          gate = doorPoint(ra, rb, pass.axis);
+        }
       } else {
         gate = doorPoint(ra, rb, pass.axis);
       }
 
-      goTo(gate, pass.axis, false);
-      goTo({ x: rb.cx, y: rb.cy }, pass.axis, true);
+      const isStair = pass.via !== 'door';
+      // Pour un escalier, on rejoint d'abord sa colonne (horizontal), puis on
+      // descend/monte, puis on entre dans la pièce : l'axe d'approche est 'h'.
+      goTo(gate, isStair ? 'h' : pass.axis, false);
+      goTo({ x: rb.cx, y: rb.cy }, isStair ? 'h' : pass.axis, true);
     }
 
     if (!ok || waypoints.length === 0) {
