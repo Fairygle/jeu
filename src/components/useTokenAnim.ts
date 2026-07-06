@@ -1,6 +1,6 @@
 import { RefObject, useLayoutEffect, useRef, useState } from 'react';
 import { ADJACENCY, RoomId } from '../game/board';
-import { Axis, passageBetween } from './passages';
+import { passageBetween } from './passages';
 
 export interface TokenStyle {
   left: number;
@@ -24,19 +24,6 @@ function pickIntermediate(from: RoomId, to: RoomId): RoomId | null {
   const a = ADJACENCY[from] || [];
   const b = ADJACENCY[to] || [];
   return a.find((r) => b.includes(r)) ?? null;
-}
-
-/** Milieu de la cloison mitoyenne entre deux pièces (pour une porte). */
-function doorPoint(a: Rect, b: Rect, axis: Axis): Pt {
-  if (axis === 'h') {
-    // passage horizontal : x au milieu de l'espace entre les deux, y aligné sur le recouvrement
-    const x = a.cx < b.cx ? (a.right + b.left) / 2 : (a.left + b.right) / 2;
-    const y = (Math.max(a.top, b.top) + Math.min(a.bottom, b.bottom)) / 2;
-    return { x, y };
-  }
-  const y = a.cy < b.cy ? (a.bottom + b.top) / 2 : (a.top + b.bottom) / 2;
-  const x = (Math.max(a.left, b.left) + Math.min(a.right, b.right)) / 2;
-  return { x, y };
 }
 
 const STEP_MS = 140;
@@ -119,14 +106,10 @@ export function useTokenAnim(
     let cursor: Pt = (() => { const r = rectFor(from)!; return { x: r.cx, y: r.cy }; })();
     let ok = true;
 
-    const goTo = (target: Pt, axis: Axis, stop: boolean) => {
-      // trajet en L strict selon l'axe demandé
-      const first: Pt = axis === 'h' ? { x: target.x, y: cursor.y } : { x: cursor.x, y: target.y };
-      if (Math.abs(first.x - cursor.x) > 1.5 || Math.abs(first.y - cursor.y) > 1.5) {
-        waypoints.push(first); stops.push(false); cursor = first;
-      }
-      if (Math.abs(target.x - cursor.x) > 1.5 || Math.abs(target.y - cursor.y) > 1.5) {
-        waypoints.push(target); stops.push(stop); cursor = target;
+    const pushPt = (p: Pt, stop: boolean) => {
+      const prev = cursor;
+      if (Math.abs(p.x - prev.x) > 1.5 || Math.abs(p.y - prev.y) > 1.5) {
+        waypoints.push(p); stops.push(stop); cursor = p;
       } else if (stop && stops.length) {
         stops[stops.length - 1] = true;
       }
@@ -138,30 +121,45 @@ export function useTokenAnim(
       const pass = passageBetween(a, b);
       if (!ra || !rb || !pass) { ok = false; break; }
 
-      // Point de passage : escalier (aligné sur sa colonne X, à hauteur de l'interstice)
-      // ou milieu de cloison pour une porte.
-      let gate: Pt;
-      if (pass.via !== 'door' && stairRefs?.current) {
+      // Coordonnée transverse du passage (là où se trouve la porte / l'escalier)
+      // et axe de franchissement.
+      let crossX: number; // position horizontale du passage
+      let crossKind: 'vertical' | 'horizontal';
+
+      if (pass.via !== 'door') {
+        // Escalier : franchissement vertical, aligné sur la colonne de l'escalier
         const stEl =
-          pass.via === 'stairL' ? stairRefs.current.get('stairL')
-          : pass.via === 'stairM' ? stairRefs.current.get('stairM')
-          : stairRefs.current.get('stairR');
-        if (stEl) {
-          const rs = rectOf(wrap, stEl);
-          const y = ra.cy < rb.cy ? (ra.bottom + rb.top) / 2 : (ra.top + rb.bottom) / 2;
-          gate = { x: rs.cx, y };
-        } else {
-          gate = doorPoint(ra, rb, pass.axis);
-        }
+          pass.via === 'stairL' ? stairRefs?.current?.get('stairL')
+          : pass.via === 'stairM' ? stairRefs?.current?.get('stairM')
+          : stairRefs?.current?.get('stairR');
+        crossX = stEl ? rectOf(wrap, stEl).cx : (Math.max(ra.left, rb.left) + Math.min(ra.right, rb.right)) / 2;
+        crossKind = 'vertical';
+      } else if (pass.axis === 'v') {
+        // Porte haut/bas : franchissement vertical, aligné sur le recouvrement horizontal
+        crossX = (Math.max(ra.left, rb.left) + Math.min(ra.right, rb.right)) / 2;
+        crossKind = 'vertical';
       } else {
-        gate = doorPoint(ra, rb, pass.axis);
+        // Porte gauche/droite : franchissement horizontal, aligné sur le recouvrement vertical
+        crossKind = 'horizontal';
+        crossX = 0; // non utilisé
       }
 
-      const isStair = pass.via !== 'door';
-      // Pour un escalier, on rejoint d'abord sa colonne (horizontal), puis on
-      // descend/monte, puis on entre dans la pièce : l'axe d'approche est 'h'.
-      goTo(gate, isStair ? 'h' : pass.axis, false);
-      goTo({ x: rb.cx, y: rb.cy }, isStair ? 'h' : pass.axis, true);
+      if (crossKind === 'vertical') {
+        // 1) s'aligner face au passage (bouger en X, on reste dans la pièce de départ)
+        pushPt({ x: crossX, y: ra.cy }, false);
+        // 2) franchir tout droit (bouger en Y jusqu'au centre de la pièce d'arrivée, même X)
+        pushPt({ x: crossX, y: rb.cy }, false);
+        // 3) rejoindre le centre de la pièce d'arrivée (bouger en X)
+        pushPt({ x: rb.cx, y: rb.cy }, true);
+      } else {
+        const crossY = (Math.max(ra.top, rb.top) + Math.min(ra.bottom, rb.bottom)) / 2;
+        // 1) s'aligner face à la porte (bouger en Y)
+        pushPt({ x: ra.cx, y: crossY }, false);
+        // 2) franchir tout droit (bouger en X jusqu'au centre X de l'arrivée)
+        pushPt({ x: rb.cx, y: crossY }, false);
+        // 3) rejoindre le centre (bouger en Y)
+        pushPt({ x: rb.cx, y: rb.cy }, true);
+      }
     }
 
     if (!ok || waypoints.length === 0) {
