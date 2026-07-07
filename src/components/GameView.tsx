@@ -181,11 +181,12 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
     return [];
   }, [state, pendingForMe, myTurn, me.room]);
 
-  // Pièces dans la ligne de tir (signalées dès que Tirer est possible : mon tour, 2 PA)
+  // Pièces dans la ligne de tir (signalées dès que Tirer est possible : mon tour, 2 PA).
+  // On peut tirer sur sa propre pièce, donc elle est incluse.
   const shootRooms: RoomId[] = useMemo(() => {
     if (!myTurn || me.room === null || pendingForMe || pickingDelayed) return [];
     if (me.ap < 2) return [];
-    return LINE_OF_SIGHT[me.room].filter((r) => r !== me.room);
+    return [me.room, ...LINE_OF_SIGHT[me.room]];
   }, [myTurn, me.room, me.ap, pendingForMe, pickingDelayed]);
 
   const legendText: string | null = useMemo(() => {
