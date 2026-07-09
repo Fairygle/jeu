@@ -188,14 +188,18 @@ button {
 }
 .field input {
   width: 100%;
-  background: var(--bg);
+  background: #ffffff;
   border: 1px solid var(--border);
   border-radius: 0;
-  color: var(--text);
+  color: #16130f;
+  -webkit-text-fill-color: #16130f;
+  caret-color: #16130f;
+  color-scheme: light;
   padding: 11px 12px;
   font-size: 15px;
 }
 .field input:focus { outline: none; border-color: var(--gold-dim); }
+.field input::placeholder { color: #9a938a; }
 
 .error-box {
   background: rgba(163, 35, 29, 0.09);
@@ -1009,10 +1013,13 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 }
 .chat-bar-input input {
   flex: 1;
-  background: var(--bg);
+  background: #ffffff;
   border: 1px solid var(--border);
   border-radius: 0;
-  color: var(--text);
+  color: #16130f;
+  -webkit-text-fill-color: #16130f;
+  caret-color: #16130f;
+  color-scheme: light;
   padding: 9px 11px;
   font-size: 15px;
 }
@@ -1111,10 +1118,13 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .friends-add { display: flex; gap: 6px; margin-bottom: 8px; }
 .friends-add input {
   flex: 1;
-  background: var(--bg);
+  background: #ffffff;
   border: 1px solid var(--border);
   border-radius: 0;
-  color: var(--text);
+  color: #16130f;
+  -webkit-text-fill-color: #16130f;
+  caret-color: #16130f;
+  color-scheme: light;
   padding: 9px 11px;
   font-size: 14px;
 }
@@ -1175,10 +1185,13 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .lobby-sep::after { right: 0; }
 .lobby-code-input {
   flex: 1;
-  background: var(--bg);
+  background: #ffffff;
   border: 1px solid var(--border);
   border-radius: 0;
-  color: var(--text);
+  color: #16130f;
+  -webkit-text-fill-color: #16130f;
+  caret-color: #16130f;
+  color-scheme: light;
   padding: 11px 12px;
   font-size: 15px;
   text-transform: uppercase;
@@ -1311,10 +1324,13 @@ h1, h2, h3, .display, .brand, .btn-gold {
 }
 .lobby-chat-input input {
   flex: 1;
-  background: var(--bg);
+  background: #ffffff;
   border: 1px solid var(--border);
   border-radius: 0;
-  color: var(--text);
+  color: #16130f;
+  -webkit-text-fill-color: #16130f;
+  caret-color: #16130f;
+  color-scheme: light;
   padding: 9px 11px;
   font-size: 14px;
 }
