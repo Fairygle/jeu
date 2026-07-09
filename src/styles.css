@@ -1026,11 +1026,16 @@ button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .chat-bar-input input:focus { outline: none; border-color: var(--gold-dim); }
 .chat-send {
   width: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--gold-dim);
   border-radius: 0;
   background: #101010; color: var(--ink-light);
   color: #16130a;
   font-size: 16px;
+  padding: 0;
+  align-self: stretch;
 }
 .chat-send:disabled { opacity: 0.4; }
 
