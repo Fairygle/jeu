@@ -48,7 +48,7 @@ export default function ChatBox({ messages, myId, onSend, opponentName, opponent
         <span className="chat-bar-state">{opponentOnline ? t('mp.online') : t('mp.offline')}</span>
       </div>
       <div className="chat-bar-messages" ref={scrollRef}>
-        {recent.length === 0 && <div className="chat-empty">Écrivez un message à votre adversaire…</div>}
+        {recent.length === 0 && <div className="chat-empty">{t('chat.empty')}</div>}
         {recent.map((m, i) => {
           const mine = m.from === myId;
           const av = mine ? myAvatar : opponentAvatar;

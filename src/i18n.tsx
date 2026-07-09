@@ -50,6 +50,7 @@ const FR: Dict = {
   'mp.offline': 'hors ligne',
   // Chat
   'chat.message': 'Message…',
+  'chat.empty': 'Écrivez un message à votre adversaire…',
   'chat.opponent': 'Adversaire',
   // Amis
   'friends.title': 'Amis',
@@ -254,6 +255,7 @@ const EN: Dict = {
   'mp.online': 'online',
   'mp.offline': 'offline',
   'chat.message': 'Message…',
+  'chat.empty': 'Write a message to your opponent…',
   'chat.opponent': 'Opponent',
   'friends.title': 'Friends',
   'friends.add': 'Username to add…',

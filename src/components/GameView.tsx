@@ -29,12 +29,12 @@ interface WheelOption {
   startPicking?: 'delayedTrap';
 }
 
-const EFFECT_INFO: Partial<Record<RoomId, { icon: string; label: string }>> = {
-  1: { icon: 'antenna', label: 'Échos' },
-  4: { icon: 'pot', label: 'Ravitailler' },
-  5: { icon: 'hatch', label: 'Trappe' },
-  6: { icon: 'wave', label: 'Inonder' },
-  7: { icon: 'jump', label: 'Sauter' },
+const EFFECT_INFO: Partial<Record<RoomId, { icon: string; labelKey: string }>> = {
+  1: { icon: 'antenna', labelKey: 'act.echos' },
+  4: { icon: 'pot', labelKey: 'act.refill' },
+  5: { icon: 'hatch', labelKey: 'act.hatch' },
+  6: { icon: 'wave', labelKey: 'act.flood' },
+  7: { icon: 'jump', labelKey: 'act.jump' },
 };
 
 export default function GameView({ state, viewer, canAct, onAction, playerNames, error, deadline }: Props) {
@@ -234,7 +234,7 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       if (cost !== null && info && me.ap >= cost) {
         opts.push({
           icon: info.icon,
-          label: info.label,
+          label: t(info.labelKey),
           cost: cost === 0 ? 'gratuit' : `${cost} PA`,
           action: { type: 'activate_room' },
         });
