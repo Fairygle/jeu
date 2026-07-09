@@ -27,6 +27,9 @@ button:disabled, .btn:disabled {
 @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
+  /* Le jeu est un thème papier clair : empêche le navigateur d'assombrir
+     les champs de formulaire quand le téléphone est en mode sombre. */
+  color-scheme: light;
   /* Ambiance carte à jouer : papier blanc, encre noire, bords tranchants */
   --bg: #141414;
   --panel: #f6f3ea;        /* face de carte, blanc cassé */
@@ -2122,4 +2125,22 @@ button { user-select: none; }
   color: #a3231d;
   position: relative;
   z-index: 1;
+}
+
+/* Champs de formulaire : forcer papier clair + encre, même en mode sombre
+   système et avec l'autofill du navigateur (fond noir/jaune forcé sinon). */
+input, textarea, select {
+  color-scheme: light;
+  background-color: #ffffff;
+  color: #16130f;
+  -webkit-text-fill-color: #16130f;
+  caret-color: #16130f;
+}
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #16130f;
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  box-shadow: 0 0 0 1000px #ffffff inset;
+  transition: background-color 5000s ease-in-out 0s;
 }
