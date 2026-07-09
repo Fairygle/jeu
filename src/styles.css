@@ -188,13 +188,13 @@ button {
 }
 .field input {
   width: 100%;
-  background: #ffffff;
+  background: #ffffff !important;
   border: 1px solid var(--border);
   border-radius: 0;
-  color: #16130f;
-  -webkit-text-fill-color: #16130f;
-  caret-color: #16130f;
-  color-scheme: light;
+  color: #16130f !important;
+  -webkit-text-fill-color: #16130f !important;
+  caret-color: #16130f !important;
+  color-scheme: light !important;
   padding: 11px 12px;
   font-size: 15px;
 }
@@ -2146,11 +2146,11 @@ button { user-select: none; }
 /* Champs de formulaire : forcer papier clair + encre, même en mode sombre
    système et avec l'autofill du navigateur (fond noir/jaune forcé sinon). */
 input, textarea, select {
-  color-scheme: light;
-  background-color: #ffffff;
-  color: #16130f;
-  -webkit-text-fill-color: #16130f;
-  caret-color: #16130f;
+  color-scheme: light !important;
+  background-color: #ffffff !important;
+  color: #16130f !important;
+  -webkit-text-fill-color: #16130f !important;
+  caret-color: #16130f !important;
 }
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
