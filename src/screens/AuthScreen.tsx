@@ -65,16 +65,16 @@ export default function AuthScreen({ onGuest }: Props) {
             {mode === 'signup' && (
               <div className="field">
                 <label>{t('auth.pseudo')}</label>
-                <input value={pseudo} onChange={(e) => setPseudo(e.target.value)} placeholder={t('auth.pseudoPlaceholder')} />
+                <input value={pseudo} onChange={(e) => setPseudo(e.target.value)} placeholder={t('auth.pseudoPlaceholder')} style={{ background: '#fff', color: '#16130f' }} />
               </div>
             )}
             <div className="field">
               <label>{t('auth.email')}</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@exemple.fr" />
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@exemple.fr" style={{ background: '#fff', color: '#16130f' }} />
             </div>
             <div className="field">
               <label>{t('auth.password')}</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={(e) => e.key === 'Enter' && submit()} />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={(e) => e.key === 'Enter' && submit()} style={{ background: '#fff', color: '#16130f' }} />
             </div>
             <button className="btn btn-gold btn-block btn-lg" onClick={submit} disabled={loading || !email || !password}>
               {loading ? '…' : mode === 'login' ? t('auth.login') : t('auth.createAccount')}

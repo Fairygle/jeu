@@ -2144,13 +2144,16 @@ button { user-select: none; }
 }
 
 /* Champs de formulaire : forcer papier clair + encre, même en mode sombre
-   système et avec l'autofill du navigateur (fond noir/jaune forcé sinon). */
+   système et avec l'autofill du navigateur (fond noir/jaune forcé sinon).
+   forced-color-adjust: none empêche aussi certains navigateurs (Samsung
+   Internet, MIUI...) de réinverser les couleurs au niveau moteur de rendu. */
 input, textarea, select {
   color-scheme: light !important;
   background-color: #ffffff !important;
   color: #16130f !important;
   -webkit-text-fill-color: #16130f !important;
   caret-color: #16130f !important;
+  forced-color-adjust: none;
 }
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
