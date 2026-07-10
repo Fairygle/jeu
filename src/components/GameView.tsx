@@ -107,8 +107,9 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
   // Reste sur le plateau jusqu'à la fin de mon tour (posé pendant mon tour).
   const intelSeen = useRef(0);
 
-  // Animation d'impact de tir : éclair + étincelles sur la pièce touchée.
-  const [shootFx, setShootFx] = useState<{ id: number; room: RoomId } | null>(null);
+  // Animations de tir : 'shot' = coup de feu (fumée) sur la pièce visée,
+  // 'hit' = joueur touché (flash + étincelles), plus dramatique.
+  const [shootFx, setShootFx] = useState<{ id: number; room: RoomId; kind: 'shot' | 'hit' } | null>(null);
   const shootFxSeen = useRef(0);
   const shootFxId = useRef(0);
   useEffect(() => {
@@ -116,11 +117,20 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
     if (log.length < shootFxSeen.current) shootFxSeen.current = 0;
     for (let i = shootFxSeen.current; i < log.length; i++) {
       const e = log[i];
-      if (e.key === 'log.shoot' && log[i + 1]?.key === 'log.damage' && e.params?.room2 !== undefined) {
+      if (e.key === 'log.shoot' && e.params?.room2 !== undefined) {
         const room = e.params.room2 as RoomId;
-        setShootFx({ id: ++shootFxId.current, room });
-        const id = shootFxId.current;
-        window.setTimeout(() => setShootFx((cur) => (cur?.id === id ? null : cur)), 750);
+        const hit = log[i + 1]?.key === 'log.damage';
+        const kind: 'shot' | 'hit' = hit ? 'hit' : 'shot';
+        const id = ++shootFxId.current;
+        if (hit) {
+          // Coup de feu d'abord, impact ensuite : lecture en deux temps
+          setShootFx({ id, room, kind: 'shot' });
+          window.setTimeout(() => setShootFx((cur) => (cur?.id === id ? { id, room, kind: 'hit' } : cur)), 260);
+          window.setTimeout(() => setShootFx((cur) => (cur?.id === id ? null : cur)), 1100);
+        } else {
+          setShootFx({ id, room, kind });
+          window.setTimeout(() => setShootFx((cur) => (cur?.id === id ? null : cur)), 700);
+        }
       }
     }
     shootFxSeen.current = log.length;
@@ -298,12 +308,12 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
   const legendText: string | null = useMemo(() => {
     if (pickingDelayed) return t('game.pickDelayedRoom');
     const names = neighborRooms.map((r) => ROOMS[r].name).join(', ');
-    if (myTurn && me.room !== null && neighborRooms.length > 0)
-      return me.freeMoveAvailable ? `${t('game.foldTo')} → ${names}` : `${t('game.from')} ${ROOMS[me.room].name} → ${names}`;
+    // Les déplacements normaux et replis sont déjà signalés par les icônes de
+    // pas sur les pièces : pas de texte redondant au-dessus de la carte.
     if (pendingForMe && state.pending?.kind === 'listen' && neighborRooms.length > 0) return `${t('game.neighbors')} ${names}`;
     if (pendingForMe && state.pending?.kind === 'escape' && neighborRooms.length > 0) return `${t('game.escapeTo')} ${names}`;
     return null;
-  }, [neighborRooms, myTurn, me.room, me.freeMoveAvailable, pendingForMe, state.pending, pickingDelayed, t]);
+  }, [neighborRooms, pendingForMe, state.pending, pickingDelayed, t]);
 
   function optionsFor(room: RoomId): WheelOption[] {
     if (!myTurn || me.room === null) return [];
@@ -447,16 +457,15 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
 
   return (
     <div className="game-with-bar">
-      {/* Invite de repli — prioritaire, guide le joueur */}
-      {foldPrompt && (
-        <div className="event-banner major tone-reveal" key="fold-prompt">
-          <span className="event-icon"><ActionIcon k="runner" size={26} /></span>
-          <span className="event-text">{t('game.foldPrompt')}</span>
-        </div>
-      )}
-      {/* Pile de bannières d'événements — jusqu'à 3 visibles, tap pour fermer */}
-      {!foldPrompt && events.length > 0 && (
+      {/* Pile de bannières : invite de repli en tête + événements, tap pour fermer */}
+      {(foldPrompt || events.length > 0) && (
         <div className="event-stack">
+          {foldPrompt && (
+            <div className="event-banner major tone-reveal" key="fold-prompt">
+              <span className="event-icon"><ActionIcon k="runner" size={26} /></span>
+              <span className="event-text">{t('game.foldPrompt')}</span>
+            </div>
+          )}
           {events.map((ev) => (
             <div
               className={`event-banner ${ev.weight} tone-${ev.tone}`}
@@ -742,11 +751,20 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
       >
         <span className="room-name">{ROOMS[id].name}</span>
         {shootFx?.room === id && (
-          <span className="shoot-impact" key={shootFx.id} aria-hidden="true">
-            <span className="shoot-flash" />
-            {SPARK_ANGLES.map((deg, i) => (
-              <span className="spark" key={i} style={{ '--deg': `${deg}deg`, '--delay': `${i * 18}ms` } as React.CSSProperties} />
-            ))}
+          <span className={`shoot-impact ${shootFx.kind}`} key={`${shootFx.id}-${shootFx.kind}`} aria-hidden="true">
+            {shootFx.kind === 'shot' ? (
+              <>
+                <span className="shot-puff" />
+                <span className="shot-puff p2" />
+              </>
+            ) : (
+              <>
+                <span className="shoot-flash" />
+                {SPARK_ANGLES.map((deg, i) => (
+                  <span className="spark" key={i} style={{ '--deg': `${deg}deg`, '--delay': `${i * 18}ms` } as React.CSSProperties} />
+                ))}
+              </>
+            )}
           </span>
         )}
         <span className="room-tags">

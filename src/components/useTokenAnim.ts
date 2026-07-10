@@ -52,6 +52,15 @@ export function useTokenAnim(
     if (!wrap) return;
 
     if (!visible || room === null) {
+      // Le jeton disparaît (l'adversaire s'est déplacé hors de vue) :
+      // nuage de poussière à sa dernière position connue.
+      if (prevVisible.current && prevRoom.current !== null) {
+        const lastEl = roomRefs.current?.get(prevRoom.current);
+        if (lastEl) {
+          const r = rectOf(wrap, lastEl);
+          onPuff(r.cx, r.cy);
+        }
+      }
       setStyle((s) => ({ ...s, opacity: 0, transition: 'opacity 200ms ease' }));
       prevVisible.current = false;
       prevRoom.current = null;
