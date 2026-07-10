@@ -1,17 +1,30 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import AuthScreen from './screens/AuthScreen';
 import HomeScreen from './screens/HomeScreen';
-import RulesScreen from './screens/RulesScreen';
-import LocalGame from './screens/LocalGame';
-import OnlineGame from './screens/OnlineGame';
 import { supabase, supabaseConfigured } from './lib/supabase';
 import { useI18n } from './i18n';
 import ProfileModal from './components/ProfileModal';
 import { AvatarIcon } from './components/avatars';
 
+// Écrans lourds (plateau de jeu, animations) chargés uniquement quand on y entre,
+// pas au premier chargement de l'accueil.
+const RulesScreen = lazy(() => import('./screens/RulesScreen'));
+const LocalGame = lazy(() => import('./screens/LocalGame'));
+const OnlineGame = lazy(() => import('./screens/OnlineGame'));
+
 type Screen = 'home' | 'rules' | 'local' | 'online';
 type OnlineMode = 'code' | 'join';
+
+function ScreenLoading() {
+  return (
+    <div className="screen-loading" role="status" aria-live="polite">
+      <span className="screen-loading-dot" />
+      <span className="screen-loading-dot" />
+      <span className="screen-loading-dot" />
+    </div>
+  );
+}
 
 export default function App() {
   const { lang, setLang } = useI18n();
@@ -134,17 +147,19 @@ export default function App() {
           )}
         </>
       )}
-      {screen === 'rules' && <RulesScreen onBack={() => setScreen('home')} />}
-      {screen === 'local' && <LocalGame onBack={() => setScreen('home')} />}
-      {screen === 'online' && session && (
-        <OnlineGame
-          userId={session.user.id}
-          pseudo={pseudo ?? 'Joueur'}
-          onBack={() => setScreen('home')}
-          initialMode={onlineMode}
-          initialRow={activeRow}
-        />
-      )}
+      <Suspense fallback={<ScreenLoading />}>
+        {screen === 'rules' && <RulesScreen onBack={() => setScreen('home')} />}
+        {screen === 'local' && <LocalGame onBack={() => setScreen('home')} />}
+        {screen === 'online' && session && (
+          <OnlineGame
+            userId={session.user.id}
+            pseudo={pseudo ?? 'Joueur'}
+            onBack={() => setScreen('home')}
+            initialMode={onlineMode}
+            initialRow={activeRow}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }
