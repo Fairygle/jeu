@@ -626,8 +626,16 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
               ))}
             </span>
           )}
-          {me.traps.includes(id) && <span className="tag trap">piège</span>}
-          {me.delayedTraps.includes(id) && <span className="tag delayed">retardé</span>}
+          {me.traps.includes(id) && (
+            <span className="tag trap" title={t('act.trap')}>
+              <ActionIcon k="dynamite" size={13} />
+            </span>
+          )}
+          {me.delayedTraps.includes(id) && (
+            <span className="tag delayed" title={t('act.delayed')}>
+              <ActionIcon k="timedynamite" size={13} />
+            </span>
+          )}
           {flooded && <span className="tag flood">inondé</span>}
         </span>
       </button>

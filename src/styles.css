@@ -359,6 +359,14 @@ button {
 .tag.foe { border-color: var(--red); color: #e08070; font-weight: 700; }
 .tag.trap { border-color: var(--gold-dim); color: var(--gold); }
 .tag.delayed { border-color: var(--blue); color: var(--blue); }
+.tag.trap, .tag.delayed {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+  border-radius: 50%;
+  line-height: 0;
+}
 .tag.flood { border-color: var(--blue); color: var(--blue); }
 
 /* ---------- HUD ---------- */
