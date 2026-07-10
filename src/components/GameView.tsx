@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ADJACENCY, ALL_ROOMS, LINE_OF_SIGHT, ROOMS, RoomId, reachable } from '../game/board';
-import { GameAction, GameState, PlayerIndex, hasValidAction, roomEffectCost, validTargets } from '../game/engine';
+import { GameAction, GameState, LogEntry, PlayerIndex, hasValidAction, roomEffectCost, validTargets } from '../game/engine';
 import { ActionIcon, Hearts } from './icons';
 import { ROOM_DECOR } from './decor';
-import { useGameEvents } from './useGameEvents';
+import { LOG_ICONS, useGameEvents } from './useGameEvents';
 import { useI18n } from '../i18n';
 import { renderLog } from '../logI18n';
 import { useTokenAnim } from './useTokenAnim';
@@ -54,7 +54,75 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
 
   const secondsLeft = deadline ? Math.max(0, Math.ceil((deadline - now) / 1000)) : null;
 
-  const gameEvent = useGameEvents(state, viewer, t, playerNames);
+  const { events, dismiss: dismissEvent } = useGameEvents(state, viewer, t, playerNames);
+
+  // S3 (état) — déclaré avant l'effet S2 qui l'efface en fin de tour
+  const [intelMark, setIntelMark] = useState<{ room: RoomId; icon: string } | null>(null);
+
+  // S2 — Récap de début de tour : actions adverses visibles pendant son tour.
+  const [recap, setRecap] = useState<LogEntry[] | null>(null);
+  const oppTurnStartIdx = useRef<number | null>(null);
+  const prevActive = useRef<PlayerIndex | null>(null);
+  useEffect(() => {
+    if (state.phase !== 'playing') return;
+    if (prevActive.current === null) {
+      prevActive.current = state.active;
+      if (state.active !== viewer) oppTurnStartIdx.current = state.log.length;
+      return;
+    }
+    if (state.active !== prevActive.current) {
+      if (state.active !== viewer) {
+        // Le tour adverse commence : on note le point de départ du log,
+        // et le marqueur d'écoute devient périmé à la fin de mon tour.
+        oppTurnStartIdx.current = state.log.length;
+        setRecap(null);
+        setIntelMark(null);
+      } else if (oppTurnStartIdx.current !== null) {
+        // Mon tour revient : récap des actions adverses visibles
+        const entries = state.log
+          .slice(oppTurnStartIdx.current)
+          .filter((e) => (e.visibility === 'both' || e.visibility === viewer) && e.actor !== null && e.actor !== viewer && e.key && e.key !== 'log.turnStart');
+        setRecap(entries.length > 0 ? entries : null);
+        oppTurnStartIdx.current = null;
+      }
+      prevActive.current = state.active;
+    }
+  }, [state.active, state.phase, state.log.length, viewer]);
+
+  // Le récap disparaît dès ma première action (le log grandit pendant mon tour)
+  const recapLogLen = useRef(0);
+  useEffect(() => {
+    if (recap) recapLogLen.current = state.log.length;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recap !== null]);
+  useEffect(() => {
+    if (recap && state.active === viewer && state.log.length > recapLogLen.current) setRecap(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.log.length]);
+
+  // S3 — Marqueur persistant : pièce indiquée par une écoute / un écho.
+  // Reste sur le plateau jusqu'à la fin de mon tour (posé pendant mon tour).
+  const intelSeen = useRef(0);
+  useEffect(() => {
+    const log = state.log;
+    if (log.length < intelSeen.current) intelSeen.current = 0;
+    for (let i = intelSeen.current; i < log.length; i++) {
+      const e = log[i];
+      if (!e.key || (e.visibility !== 'both' && e.visibility !== viewer)) continue;
+      // Réponse à MON écoute/écho (l'acteur de la réponse est l'adversaire)
+      if ((e.key === 'log.listenAnswer' || e.key === 'log.echoAnswer') && e.actor !== viewer && e.params?.room) {
+        setIntelMark({ room: e.params.room as RoomId, icon: e.key === 'log.echoAnswer' ? 'antenna' : 'ear' });
+      }
+      // Révélation exacte par échos (position adverse dévoilée)
+      if (e.key === 'log.echoRevealExact' && e.params?.player !== viewer && e.params?.room) {
+        setIntelMark({ room: e.params.room as RoomId, icon: 'antenna' });
+      }
+    }
+    intelSeen.current = log.length;
+  }, [state.log.length, viewer]);
+
+  // S4 — Badge journal : entrées visibles non lues depuis la dernière ouverture.
+  const [logReadCount, setLogReadCount] = useState(0);
 
   const me = state.players[viewer];
   const foe = state.players[viewer === 0 ? 1 : 0];
@@ -348,15 +416,24 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
           <span className="event-text">{t('game.foldPrompt')}</span>
         </div>
       )}
-      {/* Bannière d'événement animée — un seul événement à la fois */}
-      {!foldPrompt && gameEvent && (
-        <div className={`event-banner ${gameEvent.weight} tone-${gameEvent.tone}`} key={gameEvent.id}>
-          {gameEvent.icon && (
-            <span className="event-icon">
-              <ActionIcon k={gameEvent.icon} size={gameEvent.weight === 'major' ? 26 : 20} />
-            </span>
-          )}
-          <span className="event-text">{gameEvent.text}</span>
+      {/* Pile de bannières d'événements — jusqu'à 3 visibles, tap pour fermer */}
+      {!foldPrompt && events.length > 0 && (
+        <div className="event-stack">
+          {events.map((ev) => (
+            <div
+              className={`event-banner ${ev.weight} tone-${ev.tone}`}
+              key={ev.id}
+              onClick={() => dismissEvent(ev.id)}
+              role="alert"
+            >
+              {ev.icon && (
+                <span className="event-icon">
+                  <ActionIcon k={ev.icon} size={ev.weight === 'major' ? 26 : 20} />
+                </span>
+              )}
+              <span className="event-text">{ev.text}</span>
+            </div>
+          ))}
         </div>
       )}
       {/* Ligne de statut unique */}
@@ -369,8 +446,27 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
           <span className={`turn-timer ${secondsLeft <= 10 ? 'urgent' : ''}`}>⏱ {secondsLeft}s</span>
         )}
         <button className="log-toggle" onClick={() => setShowRules(true)} aria-label="Règles">❓</button>
-        <button className="log-toggle" onClick={() => setShowLog(true)} aria-label="Journal">📜</button>
+        <button className="log-toggle" onClick={() => { setShowLog(true); setLogReadCount(visibleLog.length); }} aria-label="Journal">
+          📜
+          {visibleLog.length > logReadCount && <span className="log-badge">{Math.min(visibleLog.length - logReadCount, 99)}</span>}
+        </button>
       </div>
+
+      {/* S2 — Récap des actions adverses pendant son tour, jusqu'à ma première action */}
+      {recap && myTurn && (
+        <div className="turn-recap" role="status" aria-live="polite">
+          <div className="turn-recap-head">
+            <span className="turn-recap-title"><ActionIcon k="ear" size={14} /> {t('game.recapTitle')}</span>
+            <button className="turn-recap-close" onClick={() => setRecap(null)} aria-label="✕">✕</button>
+          </div>
+          {recap.map((e, i) => (
+            <div key={i} className="turn-recap-line">
+              <span className="log-ico">{e.key && LOG_ICONS[e.key] ? <ActionIcon k={LOG_ICONS[e.key]} size={13} /> : '•'}</span>
+              <span>{renderLog(e, t, playerNames)}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {(isSetup || pendingForMe || (state.pending && !pendingForMe)) && (
         <div className="prompt-mini">
@@ -570,7 +666,11 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
             </div>
             <div className="log">
               {[...visibleLog].reverse().map((e, i) => (
-                <div key={i} className={`log-entry ${e.kind ?? ''}`}>{renderLog(e, t, playerNames)}</div>
+                <div key={i} className={`log-entry ${e.kind ?? ''} ${e.actor === null ? 'sys' : e.actor === viewer ? 'mine' : 'theirs'}`}>
+                  <span className="log-turn">T{e.turn}</span>
+                  <span className="log-ico">{e.key && LOG_ICONS[e.key] ? <ActionIcon k={LOG_ICONS[e.key]} size={13} /> : null}</span>
+                  <span className="log-txt">{renderLog(e, t, playerNames)}</span>
+                </div>
               ))}
             </div>
           </div>
@@ -607,6 +707,11 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
           {isDelayedTarget && <span className="pas-mark delayed"><ActionIcon k="timedynamite" size={15} /></span>}
           {isNeighbor && !isDelayedTarget && <span className="pas-mark"><ActionIcon k={me.freeMoveAvailable && !isSetup && !pendingForMe ? 'runner' : 'footprint'} size={15} /></span>}
           {isShootable && !isDelayedTarget && <span className="shoot-mark"><ActionIcon k="revolver" size={15} /></span>}
+          {intelMark?.room === id && (
+            <span className="intel-mark" title={t('game.intelMark')}>
+              <ActionIcon k={intelMark.icon} size={15} />
+            </span>
+          )}
           {ROOM_DECOR[id] && <span className="room-decor" aria-hidden="true">{ROOM_DECOR[id]}</span>}
           {hoverOpts.length > 0 && (
             <span className="room-actions">
