@@ -2398,3 +2398,18 @@ input:-webkit-autofill:focus {
 @media (prefers-reduced-motion: reduce) {
   .shot-puff { animation-duration: 1ms; }
 }
+
+/* Compteur de pièges actifs (simples + retardés) à côté des cœurs */
+.trap-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #7a5c1e;
+  border: 1px solid var(--gold-dim);
+  background: #faf5e8;
+  padding: 1px 6px;
+  border-radius: 9px;
+  line-height: 1.3;
+}

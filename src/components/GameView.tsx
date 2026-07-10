@@ -544,6 +544,12 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
           <span className="avatar me" title={playerNames[viewer]}>{(playerNames[viewer] || 'V')[0].toUpperCase()}</span>
           <Hearts hp={Math.max(0, me.hp)} />
           <span className="ap-pip"><ActionIcon k="bolt" size={14} />{me.ap}</span>
+          {me.traps.length + me.delayedTraps.length > 0 && (
+            <span className="trap-count" title={t('game.trapCount')}>
+              <ActionIcon k="dynamite" size={13} />
+              {me.traps.length + me.delayedTraps.length}
+            </span>
+          )}
           {me.freeMoveAvailable && <span className="status" style={{ color: 'var(--gold)' }}>repli</span>}
         </span>
         <span className="player-side theirs">
