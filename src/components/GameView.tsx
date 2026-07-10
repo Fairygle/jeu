@@ -29,6 +29,9 @@ interface WheelOption {
   startPicking?: 'delayedTrap';
 }
 
+// 8 étincelles réparties en cercle pour l'impact de tir
+const SPARK_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315];
+
 const EFFECT_INFO: Partial<Record<RoomId, { icon: string; labelKey: string }>> = {
   1: { icon: 'antenna', labelKey: 'act.echos' },
   4: { icon: 'pot', labelKey: 'act.refill' },
@@ -103,6 +106,26 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
   // S3 — Marqueur persistant : pièce indiquée par une écoute / un écho.
   // Reste sur le plateau jusqu'à la fin de mon tour (posé pendant mon tour).
   const intelSeen = useRef(0);
+
+  // Animation d'impact de tir : éclair + étincelles sur la pièce touchée.
+  const [shootFx, setShootFx] = useState<{ id: number; room: RoomId } | null>(null);
+  const shootFxSeen = useRef(0);
+  const shootFxId = useRef(0);
+  useEffect(() => {
+    const log = state.log;
+    if (log.length < shootFxSeen.current) shootFxSeen.current = 0;
+    for (let i = shootFxSeen.current; i < log.length; i++) {
+      const e = log[i];
+      if (e.key === 'log.shoot' && log[i + 1]?.key === 'log.damage' && e.params?.room2 !== undefined) {
+        const room = e.params.room2 as RoomId;
+        setShootFx({ id: ++shootFxId.current, room });
+        const id = shootFxId.current;
+        window.setTimeout(() => setShootFx((cur) => (cur?.id === id ? null : cur)), 750);
+      }
+    }
+    shootFxSeen.current = log.length;
+  }, [state.log.length]);
+
   useEffect(() => {
     const log = state.log;
     if (log.length < intelSeen.current) intelSeen.current = 0;
@@ -144,16 +167,31 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
   // Invite « Repliez-vous » : dès qu'un repli gratuit devient disponible pour moi
   const [foldPrompt, setFoldPrompt] = useState(false);
   const prevFold = useRef(false);
+  const foldTimer = useRef<number | null>(null);
   useEffect(() => {
     const canFold = myTurn && me.freeMoveAvailable && !isSetup && !pendingForMe;
     if (canFold && !prevFold.current) {
       setFoldPrompt(true);
-      const t = setTimeout(() => setFoldPrompt(false), 2200);
+      if (foldTimer.current) window.clearTimeout(foldTimer.current);
+      foldTimer.current = window.setTimeout(() => {
+        setFoldPrompt(false);
+        foldTimer.current = null;
+      }, 2200);
       prevFold.current = true;
-      return () => clearTimeout(t);
+    } else if (!canFold) {
+      // Le repli gratuit a été consommé (déplacement) ou n'est plus dispo :
+      // on referme immédiatement, plus jamais figé à l'écran.
+      prevFold.current = false;
+      setFoldPrompt(false);
+      if (foldTimer.current) {
+        window.clearTimeout(foldTimer.current);
+        foldTimer.current = null;
+      }
     }
-    if (!canFold) prevFold.current = false;
   }, [myTurn, me.freeMoveAvailable, isSetup, pendingForMe]);
+  useEffect(() => () => {
+    if (foldTimer.current) window.clearTimeout(foldTimer.current);
+  }, []);
 
   // --- Animation des déplacements : mesure réelle des pièces + jetons flottants ---
   const boardWrapRef = useRef<HTMLDivElement>(null);
@@ -703,6 +741,14 @@ export default function GameView({ state, viewer, canAct, onAction, playerNames,
         aria-label={ROOMS[id].name}
       >
         <span className="room-name">{ROOMS[id].name}</span>
+        {shootFx?.room === id && (
+          <span className="shoot-impact" key={shootFx.id} aria-hidden="true">
+            <span className="shoot-flash" />
+            {SPARK_ANGLES.map((deg, i) => (
+              <span className="spark" key={i} style={{ '--deg': `${deg}deg`, '--delay': `${i * 18}ms` } as React.CSSProperties} />
+            ))}
+          </span>
+        )}
         <span className="room-tags">
           {isDelayedTarget && <span className="pas-mark delayed"><ActionIcon k="timedynamite" size={15} /></span>}
           {isNeighbor && !isDelayedTarget && <span className="pas-mark"><ActionIcon k={me.freeMoveAvailable && !isSetup && !pendingForMe ? 'runner' : 'footprint'} size={15} /></span>}

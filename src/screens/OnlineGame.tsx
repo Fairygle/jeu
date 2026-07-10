@@ -102,7 +102,7 @@ export default function OnlineGame({ userId, pseudo, onBack, initialMode = 'code
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') await channel.track({ userId, at: Date.now() });
       });
-    const poll = setInterval(refresh, 2500);
+    const poll = setInterval(refresh, 1200);
     return () => {
       channel.untrack();
       sb.removeChannel(channel);
